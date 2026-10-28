@@ -58,7 +58,7 @@ def test_short_secret_is_rejected():
     assert demo_credential_authorized(CODE,CODE)
 
 def test_groq_upstream_failure_is_explicit():
-    async def bad(*a):return (429,'rate limited')
+    async def bad(*a):return (503,'provider temporarily unavailable')
     with pytest.raises(RequestRejected) as exc:run('Me ajuda a retomar',CTX,'groq',CODE,KEY,CODE,bad)
     assert exc.value.status==502 and exc.value.code=='groq_upstream_error'
 
