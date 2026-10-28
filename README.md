@@ -24,7 +24,7 @@ Python · Pydantic · pytest · Groq API (adaptador opcional) · BrasilAPI (cons
 
 ## Demonstração web (Cloudflare Workers)
 
-O ponto de entrada `worker.py`, o `wrangler.toml` e a interface `web_ui.py` estão preparados para o **primeiro deploy de demonstração**. O Worker ainda não tem URL pública confirmada. Nesta etapa, a percepção é **simulada**; chamadas reais à Groq e BrasilAPI no Worker permanecem pendentes.
+O Worker está disponível em **https://fio.erika-srcastro.workers.dev/**. A versão inicial foi validada com percepção simulada. A nova camada **0.4.0** contém chamadas assíncronas à BrasilAPI e integração Groq com controle de acesso; cada integração só será marcada como validada depois dos testes remotos correspondentes.
 
 Use `uv run pywrangler dev` para desenvolvimento e `uv run pywrangler deploy` para publicação (somente após revisão). A configuração completa está em [CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md).
 
@@ -54,9 +54,9 @@ Os exemplos acima funcionam **sem rede**, usando um classificador de intenção 
 
 - **Fase 2:** oito cenários comportamentais documentados, cada um com uma execução; não demonstram consistência estatística.
 - **Fase 3 — v3.1:** 29 testes locais aprovados em 28/10/2026; a integração externa foi testada com transporte simulado.
-- **Ainda pendente:** executar e registrar chamadas reais às APIs, testar o modelo LLM conectado e realizar deploy público na Cloudflare.
+- **Próxima validação:** confirmar o deploy v0.4.0 na Cloudflare, realizar chamadas reais às APIs e registrar traces. A chave Groq nunca é publicada; para ativar a experiência protegida é necessário também o Secret `FIO_DEMO_ACCESS_KEY`.
 
-Consulte [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [validação](docs/VALIDACAO.md), [observabilidade](docs/OBSERVABILIDADE.md) e [segurança](SECURITY.md).
+Consulte [ativação Groq](docs/GROQ_ACTIVATION.md), [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [validação](docs/VALIDACAO.md), [observabilidade](docs/OBSERVABILIDADE.md) e [segurança](SECURITY.md).
 
 ## Estrutura
 
