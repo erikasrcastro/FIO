@@ -1,6 +1,6 @@
 # Observabilidade e rastreabilidade — contrato proposto
 
-> **Estado:** especificação. O FIO ainda não produz telemetria persistente em ambiente público. Este documento NÃO é evidência de deploy.
+> **Estado:** o Worker já emite eventos categóricos com `trace_id` e tempo de processamento em logs. Ainda não há evidência de armazenamento, consultas estruturadas ou retenção configurada para esses logs. Este documento descreve a evolução planejada.
 
 ## Objetivo
 
