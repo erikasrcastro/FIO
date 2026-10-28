@@ -97,3 +97,27 @@ Referências:
 ## SEC-053 — Endpoint de diagnóstico protegido criado
 
 Versão de código v0.5.3 implementa `POST /api/diagnostics/rate-limit` autenticado pelo Secret demonstrativo existente. Usa `FIO_GROQ_RATE` com chave de contagem separada para não impactar o contador do Groq. Não faz chamadas LLM ou à BrasilAPI, e não ativa recursos pagos. Os testes locais cobrem auth, negação, falhas e isolamento. **Aguardar implantação e evidência do teste real; não marcar como aprovado ainda.** [Procedimento](SEC_053_RATE_DIAGNOSTIC.md).
+
+## SEC-053 — Prova do binding isolado: APROVADO (28/10/2026)
+
+**Ambiente:** Worker v0.5.3, rota protegida POST /api/diagnostics/rate-limit, mesma configuração do binding FIO_GROQ_RATE, contador separado do tráfego Groq. Script PowerShell SEC-053 executado com credencial apenas na máquina da responsável.
+
+| Checagem | HTTP | code | trace_id |
+|---|---|---|---|
+| 1/12 | 200 | diagnostic_allowed | `6acd12ad-4648-4c49-90c3-9a317141739a` |
+| 2/12 | 200 | diagnostic_allowed | `bd0467db-a958-40d9-ba17-a20bfc9e75de` |
+| 3/12 | 200 | diagnostic_allowed | `0d022e7e-78eb-4e07-8009-2c4d6e2166ee` |
+| 4/12 | 200 | diagnostic_allowed | `3d5e9a21-5dc4-4d3f-a4bf-a430ccbd769f` |
+| 5/12 | 200 | diagnostic_allowed | `c63c1cd9-0fe1-4692-9075-a35a8ed2a2eb` |
+| 6/12 | 200 | diagnostic_allowed | `c6362622-c0cb-4b52-8338-5af14f1d5f7d` |
+| 7/12 | 429 | diagnostic_rate_limited | `fe88ac72-a4c4-4739-a306-9c940856d096` |
+
+**Duração:** 6,1 segundos. **Permissões:** 6. **Bloqueio:** 1 (sétima solicitação). Em todas as respostas, groq_called=False. O script encerrou após a recusa HTTP 429.
+
+**Veredito SEC-053:** APROVADO para a capacidade de o binding nativo Cloudflare recusar uma checagem em seu contador independente. **SEC-052 continua inconclusivo** para o tráfego real de Groq; a Cloudflare mantém contadores aproximados, locais e eventualmente consistentes.
+
+**Privacidade:** não registrar valores de FIO_DEMO_ACCESS_KEY ou GROQ_API_KEY. O dado usado no ensaio é fictício, e nenhuma chamada ao Groq foi efetuada pelo endpoint de diagnóstico.
+
+**Workers Logs:** não há leitura autenticada do evento SEC-053 disponível nesta sessão; correlacionar o trace da sétima tentativa com event=diagnostic_rate_limit, decision=diagnostic_rate_limited, status=429, groq_called=false, versão v0.5.3, sem mensagens ou credenciais. Até essa conferência, marcar correlação com o painel como PENDENTE, sem afetar a evidência da resposta HTTP.
+
+**Encerramento posterior:** a rota temporária deve retornar HTTP 404 na v0.5.4; a evidência histórica fica neste documento. Não repetir rajadas.
