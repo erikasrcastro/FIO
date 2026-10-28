@@ -1,6 +1,6 @@
 # SEC-053 — Diagnóstico protegido da Cloudflare sem Groq
 
-**Implementação:** v0.5.3, código no GitHub. **Teste real:** pendente até confirmar o deploy.
+**Implementação e prova real:** v0.5.3, publicada. Em 28/10/2026, SEC-053 APROVADO: 6 respostas HTTP 200 e a sétima HTTP 429 (`diagnostic_rate_limited`) em 6,1s, `groq_called=False` em todas. O bloqueio ocorreu no contador isolado. SEC-052 permanece inconclusivo.
 
 ## O que valida
 
