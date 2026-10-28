@@ -35,6 +35,13 @@ a{color:#ff92b9}code{color:#fec1d6}
 <section class="panel"><h2>Seu ponto de partida</h2>
 <form id="form">
 <label for="mode">Modo de assistência</label><select id="mode"><option value="full">Full — uma orientação direta</option><option value="leve">Leve — mais autonomia</option></select>
+<label for="provider">Motor de interpretação</label>
+<select id="provider"><option value="mock">Simulado — acesso livre</option><option value="groq">Groq real — acesso protegido</option></select>
+<div id="groqWrap" style="display:none">
+<label for="groqCode">Código privado de demonstração</label>
+<input id="groqCode" type="password" maxlength="256" autocomplete="off" placeholder="Código fornecido pela responsável pelo FIO">
+<p class="mini">No modo Groq, sua mensagem e o contexto fornecido são enviados ao serviço externo de IA. Não inclua dados pessoais ou informações sensíveis. A chave da API fica apenas no servidor.</p>
+</div>
 <label for="task">Tarefa atual (opcional)</label><input id="task" maxlength="160" placeholder="Ex.: apresentação do meu projeto">
 <label for="stop">Onde você parou? (opcional)</label><input id="stop" maxlength="160" placeholder="Ex.: slide 6, seção de resultados">
 <label for="step">Próxima ação já definida (opcional)</label><input id="step" maxlength="220" placeholder="Ex.: escrever uma frase com o principal resultado">
@@ -43,7 +50,7 @@ a{color:#ff92b9}code{color:#fec1d6}
 </form></section>
 <section class="panel"><h2>Resposta do FIO</h2>
 <div class="out" id="answer" aria-live="polite">Preencha a tarefa e escreva sua mensagem, ou peça ajuda sem contexto. O FIO perguntará o que falta.</div>
-<div class="status" id="status">Ambiente: demonstração com percepção simulada. Nenhuma LLM real está ativada nesta versão.</div>
+<div class="status" id="status">Ambiente: modo simulado livre; Groq real disponível somente com código autorizado. Consulta BrasilAPI permitida em pedidos de feriados com data.</div>
 <p class="mini">Cada solicitação é independente: os dados informados são reenviados no formulário e não ficam salvos entre sessões. O identificador de rastreamento não contém dados pessoais.</p>
 <div class="mini" id="trace"></div>
 </section>
@@ -51,6 +58,10 @@ a{color:#ff92b9}code{color:#fec1d6}
 </main><footer>FIO · Projeto acadêmico de Éricka Castro · <a href="https://github.com/erikasrcastro/FIO" rel="noopener noreferrer" target="_blank">Código e documentação no GitHub</a> · <a href="/healthz">Status técnico</a></footer>
 <script>
 const form = document.getElementById('form');
+const providerSel = document.getElementById('provider');
+providerSel.addEventListener('change', () => {
+  document.getElementById('groqWrap').style.display = providerSel.value === 'groq' ? 'block' : 'none';
+});
 form.addEventListener('submit', async (ev) => {
   ev.preventDefault(); const btn=document.getElementById('send');
   const out=document.getElementById('answer'); const status=document.getElementById('status');
@@ -58,12 +69,14 @@ form.addEventListener('submit', async (ev) => {
   try {
     const payload = {mode:document.getElementById('mode').value,task:document.getElementById('task').value,
       stop_point:document.getElementById('stop').value,next_step:document.getElementById('step').value,
-      message:document.getElementById('message').value};
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      message:document.getElementById('message').value, provider:providerSel.value};
+    const headers={'Content-Type':'application/json'};
+    if(providerSel.value === 'groq') headers['X-FIO-Demo-Key']=document.getElementById('groqCode').value;
+    const r=await fetch('/api/chat',{method:'POST',headers:headers,body:JSON.stringify(payload)});
     const data=await r.json();
     if(!r.ok)throw new Error(data.error || 'Não foi possível concluir a solicitação.');
     out.textContent=data.response;
-    status.textContent='Decisão: '+data.decision+' · Modo: '+data.mode+' · Interpretação: '+data.perception;
+    status.textContent='Decisão: '+data.decision+' · Modo: '+data.mode+' · Interpretação: '+data.perception+' · API externa: '+data.integration;
     document.getElementById('trace').textContent='Trace ID: '+data.trace_id;
   } catch(e){out.textContent='Ocorreu um erro: '+e.message;status.textContent='Falha tratada; tente novamente.'}
   finally{btn.disabled=false}
