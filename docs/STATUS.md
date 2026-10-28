@@ -33,3 +33,7 @@ O código contém Rate Limiting nativo Cloudflare (5 chamadas Groq/minuto por lo
 ### Política Free (28/10/2026)
 
 A categoria gratuita do Groq impõe cotas nativas por organização (o limite oficial não é teto financeiro customizado). A implementação da v0.5.1 devolve HTTP 429 amigável ao atingir a quota do Groq e não faz retry. Confirmação das assinaturas exige checagem manual dos painéis. Se a Cloudflare exigir upgrade para algum binding, deve-se **cancelar a ativação**, não pagar.
+
+### Incidente de deploy Cloudflare 10089 — correção v0.5.2
+
+O build em 28/10/2026 processou Python e Wrangler, reconheceu `FIO_GROQ_RATE` (5/60s) e `FIO_ANALYTICS`, mas **falhou ao publicar** com erro `10089` porque Analytics Engine não havia sido ativado para a conta. A correção v0.5.2 remove esse binding de `wrangler.toml` e habilita **Workers Logs Free**, mantendo o limitador de requisições Groq. Novo deploy e validacão de produção permanecem pendentes até confirmar `/healthz`. [Laudo do incidente](INCIDENTE_BUILD_2026-10-28.md).

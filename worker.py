@@ -13,7 +13,7 @@ from fio.worker_runtime import process_chat, RequestRejected, guard_paid_model
 from web_ui import PAGE
 
 MAX_REQUEST_BYTES = 4096
-VERSION = "fio-worker-mvp-0.5.1"
+VERSION = "fio-worker-mvp-0.5.2"
 
 
 def json_response(data: dict, status: int = 200):
@@ -131,7 +131,8 @@ class Default(WorkerEntrypoint):
                                   "llm": "protected" if key_present and len(demo_code) >= 24 else "locked",
                                   "session_memory": "none", "external_api": "brasilapi_enabled",
                                   "groq_rate_limit": "configured" if getattr(self.env, "FIO_GROQ_RATE", None) is not None else "unavailable",
-                                  "usage_analytics": "configured" if getattr(self.env, "FIO_ANALYTICS", None) is not None else "unavailable"})
+                                  "usage_analytics": "configured" if getattr(self.env, "FIO_ANALYTICS", None) is not None else "not_enabled",
+                                  "metrics_backend": "workers_logs"})
 
         if path == "/" and method == "GET":
             return Response(PAGE, headers={

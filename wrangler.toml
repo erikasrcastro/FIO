@@ -16,7 +16,8 @@ namespace_id = "2026102807"
 limit = 5
 period = 60
 
-# Métricas agregadas sem conteúdo de conversas.
-[[analytics_engine_datasets]]
-binding = "FIO_ANALYTICS"
-dataset = "fio_usage_v1"
+# Workers Logs no plano Free (3 dias de retenção segundo Cloudflare em 28/10/2026).
+# Nao incluir binding Analytics Engine antes de habilitacao voluntaria da conta.
+[observability]
+enabled = true
+head_sampling_rate = 1

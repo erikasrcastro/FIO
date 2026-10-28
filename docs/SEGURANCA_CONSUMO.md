@@ -8,7 +8,7 @@
 4. **Fail closed**: binding ausente ou com falha resulta em 503, rejeição 429 quando limite é excedido. O modo simulado permanece disponível.
 5. **Chamadas Groq curtas**: modelo `openai/gpt-oss-20b`, saída máxima `350` tokens, timeout de rede de 12 s e saída JSON/Pydantic validada. Controles no backend; não são editáveis pelo visitante.
 6. **Dados**: limitação de tamanho de entrada e corpo já existente. Não há memória entre requisições.
-7. **Auditoria**: logs sem mensagens, credenciais ou IP. Analytics Engine `fio_usage_v1`: campos categóricos e tokens/latência, sem conversas, trace ID ou segredos.
+7. **Auditoria**: **Workers Logs Free**, sem mensagens, credenciais ou IP. Cada resposta contém `trace_id`; logs técnicos registram status, latência, decisão e tokens retornados pelo Groq. **Analytics Engine desabilitado no Wrangler** para evitar erro 10089; não há dataset `fio_usage_v1` ativo até ativação expressa.
 
 ## Política financeira obrigatória — somente Free, R$ 0
 
@@ -25,13 +25,21 @@ Decisão expressa em 28/10/2026: **usar exclusivamente Cloudflare Workers Free, 
 
 **Operação no Free Plan:** manter o modo simulado sempre utilizável, tratar quota excedida como indisponibilidade temporária e conferir Usage e métricas sem exigir recursos pagos. Não compartilhar credencial de demonstração indiscriminadamente.
 
-**Antes de liberar a versão 0.5.1:** validar `/healthz` e verificar que os bindings gratuitos funcionam. Caso uma ativação peça upgrade, cancelar a ativação e manter a versão 0.4.1 estável até adequarmos o projeto.
+**Versão v0.5.2 (correção do build):** confirmar `/healthz` e validar o binding `FIO_GROQ_RATE`. O Analytics Engine é opcional e está desligado: somente Workers Logs Free está configurado. Caso o painel exija upgrade, cancelar a ativação. O endpoint público mantém a última versão implantada, normalmente 0.4.1, até a Cloudflare confirmar novo deploy.
+
+## Observabilidade Free sem Analytics Engine
+
+- [Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/) é incluído no Workers Free (200.000 eventos/dia, 3 dias de retenção conforme documentação de 28/10/2026).
+- O Wrangler v0.5.2 declara `[observability] enabled = true`; o Worker continua emitindo JSON sanitizado no `print()` (sem conteúdo pessoal, mensagens e segredos).
+- Consultar **Cloudflare → Compute → Workers & Pages → fio → Observability** depois de um teste.
+- O projeto **não requer** habilitar Workers Analytics Engine nem criar o dataset `fio_usage_v1`.
+- Quando a titular decidir habilitar Analytics Engine Free voluntariamente, podemos recolocar o binding. Isso **não faz parte do deploy v0.5.2** e nunca pode exigir upgrade.
 
 ## Evals e testes
 
 Os testes na suíte reproduzem: tentativa sem senha, injeção de prompt para expor segredos, ausência/falha do limitador, bloqueio após quota, exceções Groq, ausência de tokens, e isolamento de telemetria. São **testes offline simulados** e *não constituem* pentest, fuzzing, load test ou evidência da proteção em Cloudflare real.
 
-## Queries exemplo — Analytics Engine
+## Queries opcionais — Analytics Engine (NÃO ativado no v0.5.2)
 
 Não inclui informações pessoais; índices e campos permanecem categóricos.
 

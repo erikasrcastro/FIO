@@ -56,6 +56,8 @@ Não registrar prompts completos, respostas completas, tokens, chaves, IPs ou da
 
 Exigir URL de demonstração, commit exato, testes de regressão aprovados, evidência real das APIs, `trace_id` retornado pela interface e logs correspondentes. Os resultados devem permitir reconstituir a **sequência técnica** sem recuperar conteúdo pessoal dos usuários.
 
-### Implementação a validar no deploy v0.5.0
+### Adaptação de observabilidade Free v0.5.2
 
-A nova versão declara o binding `FIO_ANALYTICS` para o dataset `fio_usage_v1` e emite um ponto por requisição processada após o início da lógica de chat. Dimensões: rota categórica, decisão em allowlist, HTTP status, percepção e API complementar. Métricas numéricas: contagem, latência ms, tokens de entrada/saída/total. O `trace_id` permanece nos logs operacionais, não no Analytics Engine. **Ainda é preciso confirmar os eventos no painel Cloudflare**. A falta de binding não interrompe o processamento. Não calcular custo real em USD apenas com contagem de tokens, sem tarifa/modelo e política de cobrança conferidos.
+A v0.5.1 não foi implantada: Cloudflare retornou **10089** exigindo habilitar Analytics Engine. A v0.5.2 retira o binding obrigatório `FIO_ANALYTICS`, utiliza **Workers Logs** no plano Free com observabilidade habilitada em `wrangler.toml`, e mantém `trace_id`, decisão, status, latência e contagem de tokens em eventos JSON por solicitação. Não existe dataset SQL `fio_usage_v1` ativo neste deploy. Após deploy, validar **Cloudflare → fio → Observability**. O aplicativo já trata Analytics Engine como opcional caso seja habilitado em atualização posterior.
+
+**Risco remanescente:** retenção de Workers Logs Free é curta (3 dias conforme documentação de 28/10/2026). Não publicar logs que contenham dados pessoais. Evals e métricas de percentis e agregação em longo prazo continuam em backlog acadêmico.

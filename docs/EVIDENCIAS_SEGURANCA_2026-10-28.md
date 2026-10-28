@@ -12,7 +12,7 @@ Controles de custo e segurança sobre a integração Groq. Backend Python/Cloudf
 - Cota excedida: HTTP 429 e mensagem de alternativa via modo simulado.
 - Classificador Groq não executa ferramentas; Pydantic valida os dados e Python determina a ação.
 - Máximo de 350 tokens de saída configurados no modelo e timeout de rede configurado em 12 segundos.
-- `FIO_ANALYTICS`: dataset `fio_usage_v1`, com contagem, latência e tokens; não armazena mensagem, resposta do modelo, IP nem segredos.
+- No código v0.5.1 havia binding `FIO_ANALYTICS`, mas o deploy foi **bloqueado com erro Cloudflare 10089** porque a conta não havia habilitado Analytics Engine. Na v0.5.2 o binding foi retirado, usando **Workers Logs Free** com contagem, latência, tokens e metadados categóricos sem conteúdo pessoal.
 - Logs técnicos continuam incluindo `trace_id` e metadados operacionais, sem conteúdo da conversa.
 
 ## Evidências de testes
@@ -26,8 +26,8 @@ Controles de custo e segurança sobre a integração Groq. Backend Python/Cloudf
 
 No momento de escrita desta evidência o domínio https://fio.erika-srcastro.workers.dev/healthz **ainda retornava v0.4.1**, portanto não é correto declarar rate limiting / Analytics Engine efetivos em produção.
 
-- [ ] Confirmar em `/healthz`: `fio-worker-mvp-0.5.1`, `groq_rate_limit: configured`, `usage_analytics: configured`.
-- [ ] Confirmar um registro agregado em `fio_usage_v1` no painel Analytics Engine sem mensagens/credenciais.
+- [ ] Confirmar em `/healthz`: `fio-worker-mvp-0.5.2`, `groq_rate_limit: configured`, `usage_analytics: not_enabled`, `metrics_backend: workers_logs`.
+- [ ] Confirmar evento JSON sanitizado em **Cloudflare → fio → Observability**. Não procurar dataset `fio_usage_v1`: Analytics Engine está desativado para não exigir habilitação da conta.
 - [ ] Efetuar uma chamada Groq com código privado e examinar contagem de tokens (sem publicar segredo).
 - [ ] Fazer teste autorizado de limite com requisições sequenciais e demonstrar resposta 429; não efetuar teste de carga agressivo em produção.
 - [ ] Verificar que modo simulado não foi bloqueado.

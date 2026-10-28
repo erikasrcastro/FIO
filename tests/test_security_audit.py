@@ -27,3 +27,15 @@ def test_no_uncapped_api_output():
 
 def test_mock_still_available():
     assert '"mock"' in (ROOT / "fio" / "worker_runtime.py").read_text("utf-8")
+
+def test_deploy_does_not_require_analytics_engine_activation():
+    # The prior Cloudflare deployment failed with 10089: Analytics Engine
+    # disabled on this Free account. Worker Logs are the safe default.
+    assert "[[analytics_engine_datasets]]" not in WRANGLER
+    assert "[observability]" in WRANGLER
+    assert "enabled = true" in WRANGLER
+    assert "name = \"FIO_GROQ_RATE\"" in WRANGLER
+
+def test_health_describes_actual_metrics_backend():
+    assert '"metrics_backend": "workers_logs"' in WORKER
+    assert '"usage_analytics": "configured"' in WORKER
