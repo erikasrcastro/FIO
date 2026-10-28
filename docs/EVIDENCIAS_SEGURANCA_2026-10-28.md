@@ -17,16 +17,16 @@ Controles de custo e segurança sobre a integração Groq. Backend Python/Cloudf
 
 ## Evidências de testes
 
-- GitHub Actions da implementação principal: **71 testes aprovados**, execução https://github.com/erikasrcastro/FIO/actions/runs/40710884456.
+- GitHub Actions do código de segurança + correção de deploy v0.5.2: **74 testes aprovados**, execução https://github.com/erikasrcastro/FIO/actions/runs/40724281556. A implementação inicial contou 71 testes no run 40710884456.
 - GitHub Actions do endpoint de saúde adicional: https://github.com/erikasrcastro/FIO/actions/runs/40711026257.
 - Testes específicos: bloqueio de credencial, não execução de chamadas pagas se a credencial for inválida, cota estourada, binding ausente, exceção no limitador, resposta do limitador malformada, modo simulado sem Secret, bypass de regras determinísticas, injeção textual tentando acessar credenciais, validação dos tokens e não exposição das métricas no corpo de resposta.
 - Limite de evidência: testes com limitador e transporte simulados, não ensaio de carga nem pentest.
 
-## Verificação de produção (pendente)
+## Verificação de produção (parcial — implantação v0.5.2 comprovada)
 
-No momento de escrita desta evidência o domínio https://fio.erika-srcastro.workers.dev/healthz **ainda retornava v0.4.1**, portanto não é correto declarar rate limiting / Analytics Engine efetivos em produção.
+**Atualização de 28/10/2026:** o domínio https://fio.erika-srcastro.workers.dev/healthz **retorna v0.5.2** e informa presença do binding `FIO_GROQ_RATE`. A presença do binding não é prova do bloqueio HTTP 429; esse ensaio e a inspeção dos logs permanecem pendentes. Analytics Engine permanece intencionalmente desligado.
 
-- [ ] Confirmar em `/healthz`: `fio-worker-mvp-0.5.2`, `groq_rate_limit: configured`, `usage_analytics: not_enabled`, `metrics_backend: workers_logs`.
+- [x] Confirmado em `/healthz`: `fio-worker-mvp-0.5.2`, `groq_rate_limit: configured`, `usage_analytics: not_enabled`, `metrics_backend: workers_logs`.
 - [ ] Confirmar evento JSON sanitizado em **Cloudflare → fio → Observability**. Não procurar dataset `fio_usage_v1`: Analytics Engine está desativado para não exigir habilitação da conta.
 - [ ] Efetuar uma chamada Groq com código privado e examinar contagem de tokens (sem publicar segredo).
 - [ ] Fazer teste autorizado de limite com requisições sequenciais e demonstrar resposta 429; não efetuar teste de carga agressivo em produção.
