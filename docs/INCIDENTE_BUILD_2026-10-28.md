@@ -34,9 +34,9 @@ A versão v0.5.1 incluiu `[[analytics_engine_datasets]]` no `wrangler.toml` sem 
 
 ## Critérios de aceite
 
-- [ ] GitHub Actions aprovado para a versão corrigida.
-- [ ] Novo build da Cloudflare conclui como Ready, sem erro 10089.
-- [ ] `/healthz` mostra `fio-worker-mvp-0.5.2` e `groq_rate_limit: configured`.
+- [x] GitHub Actions da v0.5.2 aprovado: **74 testes**, run https://github.com/erikasrcastro/FIO/actions/runs/40724281556.
+- [x] O endpoint público passou a servir **v0.5.2** após o erro 10089 ter sido removido. Isso comprova implantação ativa; a confirmação do rótulo literal Ready no painel de Deployments permanece administrativa.
+- [x] `/healthz` verificado em 28/10/2026: `fio-worker-mvp-0.5.2`, `groq_rate_limit: configured`, `usage_analytics: not_enabled`, `metrics_backend: workers_logs`.
 - [ ] Simulado Full/Leve responde corretamente.
 - [ ] Modo Groq protegido funciona ou devolve falha segura, sem divulgar Secrets.
 - [ ] Evento no painel de observabilidade, sem dados sensíveis.
