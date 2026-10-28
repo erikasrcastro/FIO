@@ -34,15 +34,29 @@
 - Resultado: **aprovado** para fluxo end-to-end com BrasilAPI no Worker.
 - Limite de evidência: o resultado foi verificado externamente pela interface e respectiva classificação da integração; não houve acesso aos logs internos da Cloudflare.
 
-## API-02 — Groq real
+## API-02 — Groq real (usuária, 28/10/2026)
 
-- Estado: **pendente de teste autorizado**.
-- A interface dispõe da opção «Groq real — acesso protegido».
-- Somente a proprietária deve utilizar `FIO_DEMO_ACCESS_KEY` no campo da interface.
-- Teste sugerido: tarefa e ponto de parada fictícios, mensagem «Perdi o fio da apresentação. Pode me orientar?».
-- Critérios para aprovar: percepção `groq`, decisão contextual, resposta segura, trace ID e ausência de erros.
-- Em caso de falha: registrar o código/erro genérico e trace ID, **sem** compartilhar chaves.
+- **Executado e observado pela interface web**, com duas capturas: modo Full e Leve, mesmo contexto.
+- Campo `Motor de interpretação`: `Groq real — acesso protegido`; credencial de demonstração informada pela proprietária. Nenhum valor secreto foi registrado.
+- Tarefa: «finalizar o app fio»; ponto de parada: «configuração de secret»; próxima ação confirmada: **não preenchida**.
+- Mensagem: «fui pegar agua e esqueci oq ue fazer agora».
+- Ambos os resultados exibiram `Interpretação: groq` e `API externa: none` (none se refere à BrasilAPI, não ao Groq).
+- Full: `Decisão: pedir_proximo_passo`; trace ID `a176a3fa-6293-47d0-9568-00d62f9b212e`.
+- Leve: `Decisão: pedir_proximo_passo`; trace ID `2f70a78d-08d3-4846-8b98-d526bd562718`.
+- Resposta idêntica nos dois modos: «Você estava em configuração de secret. Qual era a próxima ação concreta prevista nessa parte?».
+- **Avaliação da integração Groq:** aprovada quanto a processamento autorizado, classificação e retorno; as duas capturas exibem `groq`. Não houve inspeção direta dos logs internos da Cloudflare.
+- **Avaliação do comportamento Full/Leve:** reprovada na versão 0.4.0 quando falta o próximo passo; incidente **BUG-01**.
+
+## BUG-01 — Full e Leve iguais com contexto parcial
+
+- **Causa raiz verificada no código**: `FIOAgent._retomar()` verificava a ausência de `proximo_passo_confirmado` antes de consultar `modo`, levando ambas as modalidades à mesma ramificação `pedir_proximo_passo`.
+- **Correção**: ramificação Full oferece microação explícita para reencontrar o ponto de parada sem supor ações anteriores; Leve oferece escolha contextual para preservar autonomia. Também foram diferenciadas as perguntas quando falta tarefa ou ponto de parada.
+- **Teste de regressão**: `test_r03_regressao_print_full_leve_sem_proximo_passo` (reproduz o texto e a classificação Groq simulada) e `test_groq_full_vs_leve_without_confirmed_next_step` (caminho completo usando transporte Groq simulado).
+- **CI**: 51 testes aprovados no GitHub Actions, execução https://github.com/erikasrcastro/FIO/actions/runs/40707386497.
+- **Versão para validação pública**: `fio-worker-mvp-0.4.1`. O CI aprovado **não substitui** o teste real da implantação atualizada.
+- **Evidência visual**: capturas apresentadas pela proprietária nesta conversa, não publicadas no repositório para evitar compartilhar imagens que contenham campos de credenciais, ainda que mascarados.
+- **Próxima comprovação**: `/healthz` na versão 0.4.1, repetir cenário Groq real em Full e Leve, capturar as duas decisões distintas e respectivos trace IDs.
 
 ## Conclusão provisória
 
-O Worker 0.4.0 foi visto em produção e há evidência de uma consulta real ao serviço externo BrasilAPI. O Groq está configurado como protegido, mas não há evidência empírica de execução de inferência até concluir API-02. Não confundir CI de testes, endpoint saudável, segredos cadastrados e integração verificada.
+O Worker 0.4.0 foi visto em produção; a BrasilAPI foi consultada e o Groq real retornou classificação pela interface web em duas modalidades. Foi descoberto o BUG-01 (mesma resposta Full/Leve com próximo passo ausente) e publicada a correção 0.4.1 no GitHub, com 51 testes aprovados. Ainda pendente: validação do deploy v0.4.1 com respostas Full/Leve distintas no ambiente Cloudflare.
