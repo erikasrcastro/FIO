@@ -1,10 +1,14 @@
 # SEC-052 | FIO: verificacao controlada do rate limiter (PowerShell 5.1 ou 7).
 # Maximo 6 chamadas; sem retry automatico; sem imprimir, salvar ou enviar segredos para terceiros.
+param(
+    [Parameter(Mandatory = $true)]
+    [System.Security.SecureString]$DemoAccessKey
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $uri = 'https://fio.erika-srcastro.workers.dev/api/chat'
 $maxRequests = 6
-$secret = Read-Host 'Cole FIO_DEMO_ACCESS_KEY (NAO a chave GROQ_API_KEY)' -AsSecureString
+$secret = $DemoAccessKey
 $ptr = [IntPtr]::Zero
 $plainCode = $null
 $previousProgress = $ProgressPreference
