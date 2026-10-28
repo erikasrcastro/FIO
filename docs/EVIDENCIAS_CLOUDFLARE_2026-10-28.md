@@ -89,6 +89,24 @@
 
 **Segurança da evidência:** três screenshots da proprietária foram examinados nesta conversa. Seus campos de credencial estão mascarados; não são republicados no repositório público por prudência. Foram persistidos somente os resultados técnicos e IDs não secretos.
 
+
+## WEB-052 — Smoke test público após deploy 0.5.2 (28/10/2026)
+
+**Procedimento:** preenchimento real da interface `https://fio.erika-srcastro.workers.dev/`, com dados inteiramente sintéticos, modo `Full` e percepção `mock`. Nenhuma credencial foi fornecida; Groq não foi selecionado.
+
+- Tarefa: `Revisar documentação de teste`.
+- Ponto de parada: `Seção de resultados`.
+- Próximo passo confirmado: `Conferir o último item escrito`.
+- Mensagem: `Fiz uma pausa e quero retomar`.
+- Resposta: «Você estava em Seção de resultados. Próxima ação: Conferir o último item escrito.»
+- Decisão: `orientar_full`.
+- Interpretação: `mock`.
+- API complementar: `nenhuma`.
+- Trace ID: `278311a6-e682-408c-814a-73446d6fa493`.
+- Erros visíveis: nenhum.
+- **Resultado:** aprovado para processamento UI → backend → resposta contextual v0.5.2.
+- **Limite de conclusão:** este teste não prova logs efetivamente persistidos, bloqueio HTTP 429, nem chamadas Groq reais na versão 0.5.2. Conferir o trace ID no painel Workers Logs para validar OBS-052.
+
 ## Conclusão provisória
 
-O Worker **v0.4.1** foi confirmado em produção e a BrasilAPI foi consultada com sucesso. A chamada Groq real e a diferenciação Full/Leve foram observadas pela interface. O BUG-01 está **resolvido e revalidado em produção** no REG-01, além dos 51 testes de CI aprovados. Permanecem pendentes testes de limites/rate limiting, resiliência, carga e observabilidade operacional, antes de divulgar irrestritamente o acesso ao modo Groq.
+O Worker **v0.5.2** foi confirmado em produção; o smoke test WEB-052 também passou usando interpretação simulada. A BrasilAPI foi consultada com sucesso anteriormente (API-01). A chamada Groq real e a diferenciação Full/Leve foram observadas pela interface. O BUG-01 está **resolvido e revalidado em produção** no REG-01, além dos 74 testes de CI aprovados na versão v0.5.2. Permanecem pendentes testes de limites/rate limiting, resiliência, carga e observabilidade operacional, antes de divulgar irrestritamente o acesso ao modo Groq.
