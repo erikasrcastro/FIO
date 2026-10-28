@@ -3,9 +3,9 @@
 ## Ambiente
 
 - URL: https://fio.erika-srcastro.workers.dev/
-- Versão observada por consulta pública em `/healthz`: `fio-worker-mvp-0.4.0`.
+- Versão observada por consulta pública em `/healthz`: **`fio-worker-mvp-0.4.1`** (confirmada novamente após as capturas da proprietária).
 - `/healthz`: `ok: true`, `llm: protected`, `session_memory: none`, `external_api: brasilapi_enabled`.
-- O estado `protected` indica que o Worker reconhece a configuração dos dois Secrets. **Não comprova, por si só, uma chamada bem-sucedida ao Groq.**
+- O estado `protected` indica que o Worker reconhece a configuração dos dois Secrets. **Sozinho não prova uma chamada Groq**, mas os testes de interface API-02 e REG-01 exibem `Interpretação: groq` com respostas retornadas pelo backend.
 - Chaves de API, senha de demonstração e outros segredos não constam desta evidência.
 
 ## WEB-01 — Retomada de tarefa via interface (versão 0.3.2)
@@ -55,8 +55,40 @@
 - **CI**: 51 testes aprovados no GitHub Actions, execução https://github.com/erikasrcastro/FIO/actions/runs/40707386497.
 - **Versão para validação pública**: `fio-worker-mvp-0.4.1`. O CI aprovado **não substitui** o teste real da implantação atualizada.
 - **Evidência visual**: capturas apresentadas pela proprietária nesta conversa, não publicadas no repositório para evitar compartilhar imagens que contenham campos de credenciais, ainda que mascarados.
-- **Próxima comprovação**: `/healthz` na versão 0.4.1, repetir cenário Groq real em Full e Leve, capturar as duas decisões distintas e respectivos trace IDs.
+- **Comprovação posterior**: ver REG-01 abaixo. A validação em produção foi realizada pela proprietária e registrada por capturas com trace IDs distintos.
+
+## REG-01 — Reteste do BUG-01 em produção, versão 0.4.1 (28/10/2026)
+
+**Objetivo:** comprovar diferenciação Full/Leve no contexto incompleto, com autenticação autorizada e classificação Groq real.
+
+**Ambiente verificado externamente:** `https://fio.erika-srcastro.workers.dev/healthz` devolveu `ok: true`, `version: fio-worker-mvp-0.4.1`, `llm: protected`, `session_memory: none`, `external_api: brasilapi_enabled`.
+
+**Entrada idêntica nos dois cenários:**
+- Tarefa: `finalizar o app fio`.
+- Ponto de parada: `configuração de secret`.
+- Próxima ação já definida: **vazio**.
+- Mensagem: `não lembro o que tenho que fazer agora`.
+- Motor: **Groq real — acesso protegido**. Credencial de demonstração mantida privada.
+- Única variável alterada: modo `full` ou `leve`.
+
+| Propriedade | Modo Full | Modo Leve |
+|---|---|---|
+| Versão | 0.4.1 | 0.4.1 |
+| Decisão | `orientar_full_sem_passo` | `orientar_leve_sem_passo` |
+| Interpretação | `groq` | `groq` |
+| API complementar de dados | `nenhuma` | `nenhuma` |
+| Trace ID | `358592be-8c7c-410e-9090-514189413512` | `b7134866-7fc3-4ef8-9d1a-3dfa0dbb2ed0` |
+
+**Resposta Full:** «Na tarefa 'finalizar o app fio', você parou em 'configuração de secret'. Primeiro movimento: volte a essa parte e confira o último item concluído, sem alterar nada ainda. Assim você recupera o ponto de retomada.»
+
+**Resposta Leve:** «Você parou em 'configuração de secret' na tarefa 'finalizar o app fio'. Prefere rever o que já concluiu ou identificar o que falta nessa etapa? Escolha só um desses caminhos.»
+
+**Resultado:** **APROVADO**, com diferenciação observável dos modos, preservação de contexto fornecido e nenhuma afirmação inventada sobre próximo passo. Também validada a nova nomenclatura do painel `API de dados: nenhuma`, que não confunde uso de Groq com consumo da BrasilAPI.
+
+**Limitações:** não foram inspecionados os logs internos do Worker ou métricas de custo do Groq, nem realizados testes de carga, latência percentil, abuso, resistência a prompt injection ou consistência estatística. O teste demonstra comportamento deste par de execuções, não garantia universal.
+
+**Segurança da evidência:** três screenshots da proprietária foram examinados nesta conversa. Seus campos de credencial estão mascarados; não são republicados no repositório público por prudência. Foram persistidos somente os resultados técnicos e IDs não secretos.
 
 ## Conclusão provisória
 
-O Worker 0.4.0 foi visto em produção; a BrasilAPI foi consultada e o Groq real retornou classificação pela interface web em duas modalidades. Foi descoberto o BUG-01 (mesma resposta Full/Leve com próximo passo ausente) e publicada a correção 0.4.1 no GitHub, com 51 testes aprovados. Ainda pendente: validação do deploy v0.4.1 com respostas Full/Leve distintas no ambiente Cloudflare.
+O Worker **v0.4.1** foi confirmado em produção e a BrasilAPI foi consultada com sucesso. A chamada Groq real e a diferenciação Full/Leve foram observadas pela interface. O BUG-01 está **resolvido e revalidado em produção** no REG-01, além dos 51 testes de CI aprovados. Permanecem pendentes testes de limites/rate limiting, resiliência, carga e observabilidade operacional, antes de divulgar irrestritamente o acesso ao modo Groq.
