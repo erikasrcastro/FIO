@@ -10,7 +10,8 @@ dependencies = [
 [dependency-groups]
 dev = [
   "workers-py",
-  "workers-runtime-sdk"
+  "workers-runtime-sdk",
+  "pytest>=8,<10"
 ]
 
 [tool.pytest.ini_options]

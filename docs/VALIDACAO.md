@@ -12,14 +12,14 @@
 ## Executar
 
 ~~~bash
-python -m pip install -r requirements.txt
-python -m pytest -q
-python demo.py
-python demo_integracao.py
+uv sync
+uv run pytest -q
+uv run python demo.py
+uv run python demo_integracao.py
 # Somente em ambiente com rede:
-python demo_api_real.py
+uv run python demo_api_real.py
 # Somente com GROQ_API_KEY em variável de ambiente:
-python demo_groq.py
+uv run python demo_groq.py
 ~~~
 
 Critérios mínimos: resposta específica ou esclarecimento; respeito ao modo Full/Leve; nenhuma alegação de persistência; erros externos tratados sem alucinação; nenhuma exposição de credenciais.

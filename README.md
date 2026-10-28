@@ -30,13 +30,13 @@ Use `uv run pywrangler dev` para desenvolvimento e `uv run pywrangler deploy` pa
 
 ## Execução local
 
-Requisitos: Python 3.10 ou superior.
+Requisitos para o projeto completo e Cloudflare Workers: Python 3.13 e [uv](https://docs.astral.sh/uv/).
 
 ~~~bash
-python -m pip install -r requirements.txt
-python -m pytest -q
-python demo.py
-python demo_integracao.py
+uv sync
+uv run pytest -q
+uv run python demo.py
+uv run python demo_integracao.py
 ~~~
 
 Os exemplos acima funcionam **sem rede**, usando um classificador de intenção e uma integração simulados. Para testar chamadas reais, consulte [o plano de validação](docs/VALIDACAO.md). A configuração de `GROQ_API_KEY` é necessária exclusivamente para a demo com LLM real; não coloque credenciais no Git.

@@ -38,3 +38,7 @@ Documentação oficial: https://developers.cloudflare.com/workers/configuration/
 ## Atenção: validação do primeiro deploy
 
 Se a compilação Pyodide falhar, copie o erro do **Build log**, sem credenciais, e corrija o projeto antes de tentar publicar. O código foi versionado, mas o funcionamento específico no ambiente Cloudflare ainda não foi comprovado por build remoto.
+
+## Troubleshooting de build — 28/10/2026
+
+Falha observada na primeira tentativa: `requirements.txt exists. Delete the file to continue`. O Pywrangler atual exige declarações de dependência em `pyproject.toml`. Correção: arquivo `requirements.txt` retirado do repositório; `pytest` movido para o grupo `dev` de `pyproject.toml`; GitHub Actions passou a instalar/executar via `uv`. A Cloudflare poderá executar o deploy novamente a partir do novo commit. **A correção do código não comprova ainda que o deploy completo esteja funcionando.**
