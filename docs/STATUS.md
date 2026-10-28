@@ -11,7 +11,7 @@
 | BrasilAPI | **Integração real validada** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` | Falha externa em produção |
 | Modos Full e Leve | **BUG-01 resolvido e retestado** | REG-01: orientações distintas com mesmo contexto | Amostra maior de evals |
 | Testes | **74 aprovados** | https://github.com/erikasrcastro/FIO/actions/runs/40724281556 | Testes de carga, integração e consistência |
-| Rate limiter | Configurado no Worker v0.5.2 | `groq_rate_limit: configured`; 5/60s por localidade | Confirmar bloqueio 429 no Worker real |
+| Rate limiter | **SEC-052 inconclusivo** | Seis HTTP 200 em 9s com Groq; nenhum HTTP 429 observado | Diagnóstico sem novas chamadas Groq |
 | Observabilidade | **OBS-052 aprovado em produção** | Log JSON correlacionado ao trace `278311a6-e682-408c-814a-73446d6fa493` | Revisar métrica `duration_ms: 0` |
 | Analytics Engine | **Não habilitado** por decisão Free | `usage_analytics: not_enabled` | Nenhuma ação obrigatória |
 | Orçamento | **R$ 0**, Groq Free e Workers Free | Capturas privadas de ambas as assinaturas | Respeitar cotas |
@@ -42,3 +42,7 @@
 ## Evento confirmado de observabilidade — OBS-052
 
 Na execução `WEB-052`, o FIO retornou a decisão `orientar_full`, modo mock, HTTP 200 e trace `278311a6-e682-408c-814a-73446d6fa493`. A responsável encontrou o mesmo trace no evento JSON do Workers Logs da Cloudflare, sem conteúdo pessoal, resposta textual ou segredos; `truncated=false`. **OBS-052 aprovado.** O campo `duration_ms=0` demanda revisão instrumental e não representa latência de rede.
+
+## SEC-052 (28/10/2026)
+
+Teste controlado executado em produção v0.5.2: seis chamadas Groq autorizadas em 9 segundos, todas HTTP 200, sem HTTP 429. A consistência eventual do limitador Cloudflare permite excessos temporários. **Não aprovar SG-01 como proteção estrita de cota.** Próximo passo: validar binding sem consumir Groq. Detalhes no registro de evidências de segurança.

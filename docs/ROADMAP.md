@@ -10,7 +10,7 @@ Atualizado em **28/10/2026**. Estados baseados no GitHub, CI e execução públi
 | UI pública e backend em Cloudflare | **v0.5.2 online** | `/healthz` confirmou a versão |
 | Testes automatizados | **74 aprovados** | GitHub Actions `40724281556` |
 | Secrets e controle de acesso à demo Groq | **Configurados e uso anterior validado** | Capturas Groq real e `llm: protected` |
-| Rate limiting nativo | **Binding reconhecido** | `groq_rate_limit: configured`; comportamento 429 em produção **não testado** |
+| Rate limiting nativo | **SEC-052 executado, inconclusivo** | 6 HTTP 200 em 9s, nenhum HTTP 429; consistência eventual |
 | Workers Logs | **OBS-052 validado em produção** | Log JSON encontrado com trace `278311a6-e682-408c-814a-73446d6fa493` e HTTP 200 |
 | Recuperação de falhas externas | **Testada em mocks** | pytest; cenários reais de falha controlada **pendentes** |
 | Segurança ofensiva e consistência | **Parcial** | Casos automatizados; sem pentest, sem estudo estatístico |
@@ -19,7 +19,7 @@ Atualizado em **28/10/2026**. Estados baseados no GitHub, CI e execução públi
 ## Próximos gates sem custos
 
 1. **OPS-01 (concluído):** evento JSON no Workers Logs correlacionado ao trace da UI, sem mensagens nem Secrets. Revisar `duration_ms=0` numa melhoria futura.
-2. **SEC-02:** executar teste autorizado e leve de esgotamento da cota Groq no Worker e verificar HTTP 429, sem sobrecarga; conferir que o modo simulado continua utilizável.
+2. **SEC-02 (inconclusivo):** evitar novas rajadas Groq Free. Considerar diagnóstico de binding isolado, sem inferência Groq, mantendo custo R$ 0.
 3. **EVAL-02:** repetir cenários Full/Leve com contexto ausente, incompleto e completo; registrar variabilidade, guardrails, erros e avaliação humana.
 4. **FIAP-03:** organizar link, commit de referência, relatório técnico, vídeo ou imagens permitidas, testes e limitações, mantendo todos os entregáveis em PT-BR.
 5. **Futuro (fora do escopo obrigatório):** conversação multi-turno por sessão consentida, melhorias de acessibilidade, cota global rígida apenas se houver opção gratuita comprovada.

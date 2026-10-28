@@ -24,7 +24,7 @@
 | DEP-052 | Worker v0.5.2 | `/healthz` com `ok: true` e bindings reconhecidos | Aprovado apenas para implantação/configuração |
 | WEB-052 | Worker v0.5.2 | Interface mock Full retornou `orientar_full`, trace `278311a6-e682-408c-814a-73446d6fa493` | Aprovado |
 | OBS-052 | Worker v0.5.2 | Log real com o mesmo trace, `status: 200`, `truncated: false`, sem mensagem/credenciais no evento | **Aprovado** |
-| SEC-052 | Worker v0.5.2 | Bloqueio HTTP 429 em produção | **Pendente** |
+| SEC-052 | Worker v0.5.2 | 6/6 HTTP 200 em 9s; nenhum 429 | **Inconclusivo** |
 
 Consulte [o histórico completo de evidências](EVIDENCIAS_CLOUDFLARE_2026-10-28.md) e [evidências de segurança](EVIDENCIAS_SEGURANCA_2026-10-28.md).
 
@@ -52,7 +52,7 @@ Para testes locais com rede, executar `uv run python demo_api_real.py`; para Gro
 
 ## Próximos testes de aceite
 
-- **SEC-052 (roteiro disponível):** realizar teste controlado pelo [script PowerShell](SEC_052_RATE_LIMIT.md), até 6 chamadas, e confirmar HTTP 429 com código groq_rate_limited. Ainda pendente de comprovação em produção.
+- **SEC-052 (executado, inconclusivo):** seis chamadas Groq autorizadas em 9s retornaram HTTP 200, sem bloqueio 429. Não repetir com inferência; avaliar alternativa de diagnóstico do binding sem consumo Groq.
 - **OBS-052 (concluído):** evento JSON confirmado na Cloudflare, correlacionado à UI. `duration_ms=0` exige investigação futura.
 - **EVAL-052:** cenários de contexto ausente/parcial/completo, vigilância, diagnóstico, injeção de prompt, API indisponível; 3–5 repetições conforme custo disponível, com rubrica humana.
 - **DEP-052b:** confirmar que Groq e BrasilAPI seguem funcionando com runtime v0.5.2.

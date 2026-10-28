@@ -45,3 +45,7 @@ Remove-Variable FioDemoKey
 A versão anterior OBS-052 já foi aprovada. O ensaio SEC-052 continua pendente até a proprietária enviar as saídas sanitizadas.
 
 Fontes: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/ e https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/invoke-webrequest.
+
+## Ensaio realizado — 28/10/2026
+
+A proprietária executou seis requisições autorizadas ao Groq pelo Worker v0.5.2, em 9 segundos. Todas retornaram HTTP 200; nenhum HTTP 429 foi observado. **SEC-052 permanece inconclusivo**, compatível com limites regionais aproximados e contadores eventualmente consistentes. Não repetir a bateria apenas para forçar bloqueio. A evidência integral dos seis trace IDs está registrada em EVIDENCIAS_SEGURANCA_2026-10-28.md.

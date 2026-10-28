@@ -40,7 +40,7 @@ Veja [diagrama e contratos](ARQUITETURA.md).
 | DEP-052 | `/healthz` na URL pública v0.5.2 | **Aprovado** para implantação e presença dos bindings |
 | WEB-052 | Retomada Full em v0.5.2 com percepção simulada | **Aprovado**, trace `278311a6-e682-408c-814a-73446d6fa493` |
 | OBS-052 | Verificação de evento JSON com mesmo trace no Workers Logs | **Aprovado**; status 200, versão 0.5.2, sem dados da conversa |
-| SEC-052 | Teste do bloqueio real por HTTP 429 | **Pendente** em produção |
+| SEC-052 | Ensaio de seis chamadas Groq no Worker v0.5.2 | **Inconclusivo**: todas HTTP 200 em 9s; nenhum 429 |
 
 Traces do teste REG-01: **Full** `358592be-8c7c-410e-9090-514189413512`; **Leve** `b7134866-7fc3-4ef8-9d1a-3dfa0dbb2ed0`. O contexto foi idêntico nos dois modos.
 
@@ -89,5 +89,5 @@ Não ocultar esses incidentes: demonstram testes, identificação de causa raiz 
 - [x] Testes automatizados no CI.
 - [x] Documentação de segurança e restrição Free.
 - [x] Evidência operacional de logs após v0.5.2 (OBS-052, trace correlacionado).
-- [ ] Evidência operacional do rate limiter HTTP 429 (SEC-052).
+- [ ] Evidência operacional do rate limiter HTTP 429 (SEC-052 executado, inconclusivo).
 - [ ] Revisão final conforme rubrica/roteiro exato da entrega FIAP da Fase 3.

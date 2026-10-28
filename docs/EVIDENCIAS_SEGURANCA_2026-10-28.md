@@ -74,3 +74,22 @@ Referências:
 - https://developers.cloudflare.com/analytics/analytics-engine/pricing/
 - https://console.groq.com/docs/rate-limits
 - https://console.groq.com/docs/billing-faqs
+
+## SEC-052 — Ensaio de limite Cloudflare em produção: inconclusivo
+
+**Data:** 28/10/2026. **Worker:** v0.5.2. **Cenário:** script PowerShell SEC-052, provedor Groq, credencial autorizada, dados fictícios, chamadas sequenciais e sem retry. Valores dos Secrets não integram esta evidência.
+
+| Tentativa | HTTP | Trace ID |
+| --- | --- | --- |
+| 1/6 | 200 | `2b35fb84-a199-4914-9392-b15c7da17049` |
+| 2/6 | 200 | `09160e1c-fe55-4ce4-8f69-a9b63f092815` |
+| 3/6 | 200 | `5be55449-f755-447e-b0d2-1a1d00e7941e` |
+| 4/6 | 200 | `0b606f36-305a-4a6e-a97c-3c505bb1b056` |
+| 5/6 | 200 | `7e6d1974-84a9-4c6e-a97c-3c505bb1b056` |
+| 6/6 | 200 | `fa29806a-303a-418d-b169-a395ee95b340` |
+
+**Duração total:** 9,0 segundos; **seis HTTP 200; nenhum HTTP 429**. Todas as seis requisições foram atendidas no caminho autorizado Groq do Worker; não há registro de consumo de tokens neste output.
+
+**Veredito:** SEC-052 **INCONCLUSIVO**. Não é correto aprovar o bloqueio Cloudflare nem declarar falha definitiva apenas com este lote. A documentação oficial diz que a API de Rate Limiting é aproximada, regional e usa contadores eventualmente consistentes. Uma rajada pode ultrapassar 5/60s antes da sincronização: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/.
+
+**Decisão:** não repetir a rajada com chamadas Groq Free. Para avançar, propor um ensaio controlado da resposta do binding sem executar inferência da LLM, preservando acesso protegido, limite de chamadas baixo e nenhum serviço pago. A capacidade de cumprir um teto global rígido permanece não comprovada.
