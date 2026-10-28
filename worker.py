@@ -10,10 +10,11 @@ from workers import WorkerEntrypoint, Response
 
 from fio import FIOAgent, Contexto, Modo
 from fio.worker_runtime import process_chat, RequestRejected, guard_paid_model
+from fio.rate_diagnostic import run_rate_diagnostic
 from web_ui import PAGE
 
 MAX_REQUEST_BYTES = 4096
-VERSION = "fio-worker-mvp-0.5.2"
+VERSION = "fio-worker-mvp-0.5.3"
 
 
 def json_response(data: dict, status: int = 200):
@@ -132,7 +133,8 @@ class Default(WorkerEntrypoint):
                                   "session_memory": "none", "external_api": "brasilapi_enabled",
                                   "groq_rate_limit": "configured" if getattr(self.env, "FIO_GROQ_RATE", None) is not None else "unavailable",
                                   "usage_analytics": "configured" if getattr(self.env, "FIO_ANALYTICS", None) is not None else "not_enabled",
-                                  "metrics_backend": "workers_logs"})
+                                  "metrics_backend": "workers_logs",
+                                  "rate_diagnostic": "protected_isolated"})
 
         if path == "/" and method == "GET":
             return Response(PAGE, headers={
@@ -142,6 +144,57 @@ class Default(WorkerEntrypoint):
                 "X-Content-Type-Options": "nosniff",
                 "Referrer-Policy": "no-referrer",
             })
+
+
+        # SEC-053: teste real do MESMO binding Rate Limit, com chave de contagem
+        # separada. Sem acesso à LLM, BrasilAPI ou à cota de produção Groq.
+        # O segredo de demonstração é exigido ANTES de consultar o binding.
+        if path == "/api/diagnostics/rate-limit":
+            if method != "POST":
+                return json_response({"error": "Use POST"}, 405)
+            if str(request.headers.get("content-type") or "").split(";")[0].strip().lower() != "application/json":
+                return json_response({"error": "Content-Type deve ser application/json"}, 415)
+            origin = request.headers.get("origin")
+            if origin and str(origin).rstrip("/") != f"{url.scheme}://{url.netloc}":
+                return json_response({"error": "Origem não autorizada"}, 403)
+            trace_id = str(uuid.uuid4())
+            status = 500
+            decision = "diagnostic_error"
+            try:
+                try:
+                    length = int(request.headers.get("content-length") or 0)
+                    if length > 64:
+                        return json_response({"error": "Requisição excede o limite", "trace_id": trace_id}, 413)
+                except (TypeError, ValueError):
+                    return json_response({"error": "Content-Length inválido", "trace_id": trace_id}, 400)
+                body = str(await request.text())
+                if len(body.encode("utf-8")) > 64 or json.loads(body) != {}:
+                    return json_response({"error": "Use corpo JSON vazio {}", "trace_id": trace_id}, 400)
+                expected = str(getattr(self.env, "FIO_DEMO_ACCESS_KEY", "") or "")
+                supplied = str(request.headers.get("x-fio-demo-key") or "")
+                async def check(bucket):
+                    return await limiter_allow(self.env, bucket)
+                status, result = await run_rate_diagnostic(expected, supplied, check)
+                decision = result["code"]
+                result["trace_id"] = trace_id
+                return json_response(result, status)
+            except RequestRejected as exc:
+                decision = exc.code
+                status = exc.status
+                return json_response({"error": exc.description, "code": exc.code, "trace_id": trace_id}, status)
+            except (ValueError, TypeError, json.JSONDecodeError):
+                decision = "diagnostic_input_invalid"
+                status = 400
+                return json_response({"error": "Entrada inválida", "trace_id": trace_id}, status)
+            except Exception:
+                decision = "diagnostic_internal_error"
+                status = 500
+                return json_response({"error": "Falha controlada", "trace_id": trace_id}, status)
+            finally:
+                print(json.dumps({"trace_id": trace_id, "event": "diagnostic_rate_limit",
+                                  "decision": decision, "status": status,
+                                  "groq_called": False, "bucket": "diagnostic_isolated",
+                                  "version": VERSION}))
 
         if path != "/api/chat":
             return json_response({"error": "Rota não encontrada"}, 404)

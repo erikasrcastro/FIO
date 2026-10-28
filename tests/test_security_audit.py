@@ -39,3 +39,18 @@ def test_deploy_does_not_require_analytics_engine_activation():
 def test_health_describes_actual_metrics_backend():
     assert '"metrics_backend": "workers_logs"' in WORKER
     assert '"usage_analytics": "configured"' in WORKER
+
+def test_diagnostic_route_is_protected_and_never_calls_groq():
+    assert 'if path == "/api/diagnostics/rate-limit":' in WORKER
+    segment = WORKER.split('if path == "/api/diagnostics/rate-limit":',1)[1].split('if path != "/api/chat":',1)[0]
+    assert "run_rate_diagnostic(expected, supplied, check)" in segment
+    assert 'x-fio-demo-key' in segment
+    assert "process_chat(" not in segment
+    assert "transport_http(" not in segment
+    assert '"groq_called": False' in segment
+
+def test_diagnostic_uses_existing_binding_only():
+    from fio.rate_diagnostic import DIAGNOSTIC_LIMIT_KEY
+    from fio.worker_runtime import GROQ_LIMIT_KEY
+    assert DIAGNOSTIC_LIMIT_KEY != GROQ_LIMIT_KEY
+    assert WRANGLER.count('[[ratelimits]]') == 1
