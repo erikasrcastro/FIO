@@ -129,7 +129,9 @@ class Default(WorkerEntrypoint):
             demo_code = str(getattr(self.env, "FIO_DEMO_ACCESS_KEY", "") or "")
             return json_response({"ok": True, "version": VERSION,
                                   "llm": "protected" if key_present and len(demo_code) >= 24 else "locked",
-                                  "session_memory": "none", "external_api": "brasilapi_enabled"})
+                                  "session_memory": "none", "external_api": "brasilapi_enabled",
+                                  "groq_rate_limit": "configured" if getattr(self.env, "FIO_GROQ_RATE", None) is not None else "unavailable",
+                                  "usage_analytics": "configured" if getattr(self.env, "FIO_ANALYTICS", None) is not None else "unavailable"})
 
         if path == "/" and method == "GET":
             return Response(PAGE, headers={
