@@ -9,11 +9,11 @@ from urllib.parse import urlparse
 from workers import WorkerEntrypoint, Response
 
 from fio import FIOAgent, Contexto, Modo
-from fio.worker_runtime import process_chat, RequestRejected
+from fio.worker_runtime import process_chat, RequestRejected, guard_paid_model
 from web_ui import PAGE
 
 MAX_REQUEST_BYTES = 4096
-VERSION = "fio-worker-mvp-0.4.1"
+VERSION = "fio-worker-mvp-0.5.0"
 
 
 def json_response(data: dict, status: int = 200):
@@ -39,6 +39,56 @@ async def transport_http(url: str, method: str, headers: dict, body: str | None,
     text = str(await response.text())
     return int(response.status), text
 
+
+
+async def limiter_allow(env, key: str) -> bool:
+    """Bridge to Cloudflare native, local/approximate rate limiting binding."""
+    from js import Object
+    from pyodide.ffi import to_js
+    binding = getattr(env, "FIO_GROQ_RATE", None)
+    if binding is None:
+        raise RuntimeError("missing rate limiter binding")
+    options = to_js({"key": key}, dict_converter=Object.fromEntries)
+    result = await binding.limit(options)
+    return bool(result.success)
+
+
+def usage_point(decision: str, status: int, event: dict, duration_ms: float) -> dict:
+    """No messages, response text, IP, secret, or trace ID in analytics."""
+    decisions = {"orientar_full", "orientar_leve", "orientar_full_sem_passo",
+                 "orientar_leve_sem_passo", "feriado_confirmado",
+                 "falha_api_feriados", "groq_rate_limited", "demo_access_denied",
+                 "rate_limit_unavailable", "rate_limit_invalid", "groq_upstream_error",
+                 "groq_invalid_result", "limite_vigilancia", "limite_clinico",
+                 "validation_error", "internal_error"}
+    safe_decision = decision if decision in decisions else "other"
+    interpretation = event.get("perception", "none")
+    if interpretation not in ("mock", "groq", "rule", "none"):
+        interpretation = "none"
+    external = event.get("integration", "none")
+    if external not in ("none", "brasilapi", "brasilapi_fallback"):
+        external = "none"
+    numbers = []
+    for name in ("prompt_tokens", "completion_tokens", "total_tokens"):
+        val = event.get(name, 0)
+        numbers.append(float(val) if type(val) is int and 0 <= val <= 1_000_000 else 0.0)
+    return {
+        "blobs": ["api_chat", safe_decision, str(int(status)), interpretation, external],
+        "doubles": [1.0, max(0.0, round(duration_ms, 2)), *numbers],
+        "indexes": ["fio"],
+    }
+
+
+def emit_usage_analytics(env, decision: str, status: int, event: dict, duration_ms: float) -> None:
+    """Best-effort analytics; must not affect the user's response."""
+    from js import Object
+    from pyodide.ffi import to_js
+    binding = getattr(env, "FIO_ANALYTICS", None)
+    if binding is None:
+        return
+    point = to_js(usage_point(decision, status, event, duration_ms),
+                  dict_converter=Object.fromEntries)
+    binding.writeDataPoint(point)
 
 def validate_input(body):
     if not isinstance(body, dict):
@@ -120,6 +170,11 @@ class Default(WorkerEntrypoint):
             groq_key = str(getattr(self.env, "GROQ_API_KEY", "") or "")
             demo_code = str(getattr(self.env, "FIO_DEMO_ACCESS_KEY", "") or "")
             supplied_code = str(request.headers.get("x-fio-demo-key") or "")
+            # Authorization and quota enforcement BEFORE paid inference.
+            async def permit(key):
+                return await limiter_allow(self.env, key)
+            await guard_paid_model(provider, msg, supplied_code, groq_key,
+                                   demo_code, permit)
             result, observed = await process_chat(
                 msg, context, provider, supplied_code, groq_key, demo_code, transport_http
             )
@@ -142,9 +197,18 @@ class Default(WorkerEntrypoint):
             return json_response({"error": "Ocorreu uma falha controlada", "trace_id": trace_id}, 500)
         finally:
             # Somente metadados categóricos, nunca texto, contexto ou credenciais.
+            duration_ms = round((time.monotonic() - start) * 1000, 2)
             print(json.dumps({"trace_id": trace_id, "event": "response",
                               "decision": decision, "status": status,
-                              "duration_ms": round((time.monotonic() - start)*1000, 2),
+                              "duration_ms": duration_ms,
                               "version": VERSION, "perception": event_info.get("perception", "none"),
                               "external": event_info.get("integration", "none"),
-                              "provider_status": event_info.get("provider_status")}))
+                              "provider_status": event_info.get("provider_status"),
+                              "prompt_tokens": event_info.get("prompt_tokens", 0),
+                              "completion_tokens": event_info.get("completion_tokens", 0),
+                              "total_tokens": event_info.get("total_tokens", 0)}))
+            try:
+                emit_usage_analytics(self.env, decision, status, event_info, duration_ms)
+            except Exception:
+                # No secret or exception body is logged. Metrics outage isn't user outage.
+                print(json.dumps({"event": "analytics_export_failed", "version": VERSION}))

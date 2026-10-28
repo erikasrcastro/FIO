@@ -58,6 +58,27 @@ def parse_groq_completion(body: str) -> Percepcao:
     except (ValueError, TypeError, IndexError, KeyError, ValidationError) as exc:
         raise GroqContractError("invalid provider response structure") from exc
 
+
+def extract_groq_usage(body: str) -> dict[str, int]:
+    """Return sanitized provider usage, never user content or model output.
+
+    Provider may omit usage: zeros mean 'not reported', not 'zero billed'.
+    """
+    def token(value):
+        return value if type(value) is int and 0 <= value <= 1_000_000 else 0
+    try:
+        payload = json.loads(body)
+        usage = payload.get("usage", {})
+        if not isinstance(usage, dict):
+            usage = {}
+        return {
+            "prompt_tokens": token(usage.get("prompt_tokens")),
+            "completion_tokens": token(usage.get("completion_tokens")),
+            "total_tokens": token(usage.get("total_tokens")),
+        }
+    except (ValueError, TypeError, AttributeError):
+        return {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
 class StaticPerceptor:
     """Inject a validated LLM classification into existing deterministic decision engine."""
     def __init__(self, perceived: Percepcao):

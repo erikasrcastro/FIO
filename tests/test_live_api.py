@@ -34,3 +34,21 @@ def test_model_cannot_force_malicious_actions():
         "intencao":"retomar","confianca":0.99,"extra":"drop-all"})}}]})
     with pytest.raises(GroqContractError):
         parse_groq_completion(raw)
+
+def test_groq_token_accounting_from_provider():
+    from fio.live_api import extract_groq_usage
+    assert extract_groq_usage(json.dumps({"usage":{"prompt_tokens":125,
+        "completion_tokens":43, "total_tokens":168}})) == {
+        "prompt_tokens":125, "completion_tokens":43, "total_tokens":168}
+
+
+@pytest.mark.parametrize("usage", [
+    {"prompt_tokens":-2, "completion_tokens":1000001, "total_tokens":True},
+    {"prompt_tokens":"200", "completion_tokens":1.4, "total_tokens":None},
+    None,
+])
+def test_groq_usage_invalid_values_are_not_logged_as_counts(usage):
+    from fio.live_api import extract_groq_usage
+    result = extract_groq_usage(json.dumps({"usage":usage}))
+    assert result["prompt_tokens"] == 0
+    assert result["total_tokens"] == 0

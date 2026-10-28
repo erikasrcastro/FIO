@@ -12,7 +12,7 @@ from .agent import FIOAgent
 from .feriados import BrasilAPIFeriados, FalhaServicoExterno, BASE_URL
 from .models import Contexto
 from .perception import normalizar
-from .live_api import GROQ_ENDPOINT, make_groq_payload, parse_groq_completion, StaticPerceptor, GroqContractError
+from .live_api import GROQ_ENDPOINT, make_groq_payload, parse_groq_completion, extract_groq_usage, StaticPerceptor, GroqContractError
 
 HttpTransport = Callable[[str, str, dict, str | None, int], Awaitable[tuple[int, str]]]
 
@@ -44,6 +44,42 @@ def is_rule_only(message: str) -> bool:
         "me vigie", "me fiscalize", "me punir", "vigiar tudo",
     ])
 
+
+# Shared demonstration code has no user identity. This key intentionally groups
+# all paid model traffic into one approximate per-location quota.
+GROQ_LIMIT_KEY = "fio-protected-groq-v1"
+
+async def guard_paid_model(provider: str, message: str, supplied_code: str,
+                           groq_api_key: str, demo_code: str,
+                           permit_limit) -> bool:
+    """Authorize first; charge rate limiter only when a paid LLM call is needed.
+
+    permit_limit is an awaitable callable accepting a fixed non-secret bucket.
+    None / error => fail closed, never silently use the paid API unthrottled.
+    """
+    if provider != "groq":
+        return False
+    if not groq_api_key or not demo_credential_authorized(demo_code, supplied_code):
+        raise RequestRejected(403, "demo_access_denied",
+                              "Demonstração Groq não autorizada; use o modo simulado")
+    if is_rule_only(message):
+        return False
+    if permit_limit is None:
+        raise RequestRejected(503, "rate_limit_unavailable",
+                              "Proteção de consumo temporariamente indisponível; use o modo simulado")
+    try:
+        allowed = await permit_limit(GROQ_LIMIT_KEY)
+    except Exception:
+        raise RequestRejected(503, "rate_limit_unavailable",
+                              "Proteção de consumo temporariamente indisponível; use o modo simulado") from None
+    if not isinstance(allowed, bool):
+        raise RequestRejected(503, "rate_limit_invalid",
+                              "Proteção de consumo não pôde ser validada; use o modo simulado")
+    if not allowed:
+        raise RequestRejected(429, "groq_rate_limited",
+                              "Limite de demonstração atingido. Aguarde um minuto ou utilize o modo simulado")
+    return True
+
 async def process_chat(message: str, context: Contexto, provider: str,
                        supplied_code: str, groq_api_key: str, demo_code: str,
                        transport: HttpTransport) -> tuple[dict, dict]:
@@ -55,6 +91,7 @@ async def process_chat(message: str, context: Contexto, provider: str,
 
     integration = "none"
     llm_used = False
+    token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
     service_status = None
     perception = "mock" if provider == "mock" else "rule"
 
@@ -86,6 +123,7 @@ async def process_chat(message: str, context: Contexto, provider: str,
             if service_status != 200:
                 raise RequestRejected(502, "groq_upstream_error", "Groq indisponível; tente novamente")
             perceived = parse_groq_completion(raw)
+            token_usage = extract_groq_usage(raw)
             result = FIOAgent(contexto=context, perceptor=StaticPerceptor(perceived)).responder(message)
             llm_used = True
             perception = "groq"
@@ -101,5 +139,8 @@ async def process_chat(message: str, context: Contexto, provider: str,
                 "integration": integration}
     telemetry = {"decision": result.decisao, "perception": perception,
                  "integration": integration, "llm_used": llm_used,
-                 "provider_status": service_status}
+                 "provider_status": service_status,
+                 "prompt_tokens": token_usage["prompt_tokens"],
+                 "completion_tokens": token_usage["completion_tokens"],
+                 "total_tokens": token_usage["total_tokens"]}
     return response, telemetry

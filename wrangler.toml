@@ -5,3 +5,18 @@ compatibility_flags = ["python_workers"]
 
 [vars]
 FIO_ENV = "demo_mock"
+
+# Limite aproximado de chamadas Groq por POP (Cloudflare, 5/min).
+# Uma cota global financeira estrita requer Durable Objects + controle no Groq.
+[[ratelimits]]
+name = "FIO_GROQ_RATE"
+namespace_id = "2026102807"
+
+[ratelimits.simple]
+limit = 5
+period = 60
+
+# Métricas agregadas sem conteúdo de conversas.
+[[analytics_engine_datasets]]
+binding = "FIO_ANALYTICS"
+dataset = "fio_usage_v1"

@@ -55,3 +55,7 @@ Não registrar prompts completos, respostas completas, tokens, chaves, IPs ou da
 ## Critério de prontidão para disponibilizar ao professor
 
 Exigir URL de demonstração, commit exato, testes de regressão aprovados, evidência real das APIs, `trace_id` retornado pela interface e logs correspondentes. Os resultados devem permitir reconstituir a **sequência técnica** sem recuperar conteúdo pessoal dos usuários.
+
+### Implementação a validar no deploy v0.5.0
+
+A nova versão declara o binding `FIO_ANALYTICS` para o dataset `fio_usage_v1` e emite um ponto por requisição processada após o início da lógica de chat. Dimensões: rota categórica, decisão em allowlist, HTTP status, percepção e API complementar. Métricas numéricas: contagem, latência ms, tokens de entrada/saída/total. O `trace_id` permanece nos logs operacionais, não no Analytics Engine. **Ainda é preciso confirmar os eventos no painel Cloudflare**. A falta de binding não interrompe o processamento. Não calcular custo real em USD apenas com contagem de tokens, sem tarifa/modelo e política de cobrança conferidos.

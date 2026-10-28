@@ -72,3 +72,9 @@ demo*.py       Demonstrações locais e opcionais online
 Projeto de Éricka Castro, desenvolvido no curso de Tecnologia em Agentes Inteligentes da FIAP.
 
 **Nota:** repositório público não significa produto em produção nem autorização para processar informações sensíveis. Os resultados acadêmicos distinguem simulação, execução local e integração real.
+
+## Segurança de consumo e métricas (v0.5.0)
+
+O modelo Groq é protegido por `FIO_DEMO_ACCESS_KEY` e por um limitador nativo da Cloudflare de **5 chamadas/minuto por localidade de execução**, aplicado somente após validação da credencial e antes da chamada paga. Este limitador **não é uma cota financeira global rígida**: cada localização Cloudflare possui contagem aproximada. Se o binding faltar/falhar, chamadas Groq falham de forma segura; o modo simulado segue livre. Veja [plano de segurança e custos](docs/SEGURANCA_CONSUMO.md).
+
+Métricas: logs categóricos por `trace_id` e Analytics Engine no dataset `fio_usage_v1`, agregáveis por decisão/status, latência e tokens (`usage` retornado pelo Groq). **Não** registra mensagens, outputs da LLM, IP ou segredos no dataset. Tokens ausentes retornam 0 no evento, não equivalendo a 'consumo gratuito'. A configuração do dataset precisa ser confirmada no deploy real.

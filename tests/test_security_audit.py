@@ -1,0 +1,29 @@
+"""Static security assertions on published Worker source; not a dynamic pentest."""
+from pathlib import Path
+import ast
+
+ROOT=Path(__file__).resolve().parents[1]
+WORKER=(ROOT / "worker.py").read_text("utf-8")
+WRANGLER=(ROOT / "wrangler.toml").read_text("utf-8")
+
+def test_rate_limit_binding_required_by_code():
+    assert 'name = "FIO_GROQ_RATE"' in WRANGLER
+    assert "limit = 5" in WRANGLER and "period = 60" in WRANGLER
+    assert "await guard_paid_model(" in WORKER
+    assert WORKER.index("await guard_paid_model(") < WORKER.index("await process_chat(") if "await process_chat(" in WORKER else WORKER.index("await guard_paid_model(") < WORKER.index("result, observed = await process_chat(")
+
+def test_analytics_point_excludes_secrets_and_messages():
+    # Runtime function imports a Cloudflare-only module; inspect AST without importing.
+    tree=ast.parse(WORKER)
+    fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="usage_point")
+    src=ast.get_source_segment(WORKER,fn)
+    for forbidden in ('request.headers','message =','GROQ_API_KEY','FIO_DEMO_ACCESS_KEY','trace_id'):
+        assert forbidden not in src
+
+def test_no_uncapped_api_output():
+    live=(ROOT / "fio" / "live_api.py").read_text("utf-8")
+    assert "MAX_GROQ_BODY" in live
+    assert "parse_groq_completion" in live
+
+def test_mock_still_available():
+    assert '"mock"' in (ROOT / "fio" / "worker_runtime.py").read_text("utf-8")
