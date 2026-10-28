@@ -21,3 +21,14 @@ jobs:
           enable-cache: true
       - name: Instalar dependências e rodar os testes definidos em pyproject.toml
         run: uv run --group dev python -m pytest -q
+      - name: Validar sintaxe PowerShell do SEC-052 (sem executar chamadas)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile('scripts/SEC-052.ps1', [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Host $_.ToString() }
+            exit 1
+          }
+          Write-Host 'Sintaxe SEC-052 valida. Nenhuma chamada HTTP foi executada.'
