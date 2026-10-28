@@ -1,0 +1,63 @@
+import json, asyncio, pytest
+from fio import Contexto
+from fio.worker_runtime import process_chat, RequestRejected, demo_credential_authorized
+
+CTX = Contexto(tarefa='apresentação', ponto_parada='slide 6', proximo_passo_confirmado='escrever a frase principal')
+CODE = 'a-very-long-random-demo-phrase-00001'
+KEY = 'fake-groq-secret-for-tests'
+
+async def mock_transport(url, method, headers, body, timeout):
+    if 'feriados' in url:
+        return (200,json.dumps([{'date':'2026-11-20','name':'Consciência Negra','type':'national'}]))
+    return (200,json.dumps({'choices':[{'message':{'content':json.dumps({'intencao':'retomar','modo_solicitado':None,'confianca':0.99,'justificativa_curta':'retomar'})}}]}))
+
+def run(*args, **kwargs):
+    return asyncio.run(process_chat(*args, **kwargs))
+
+def test_mock_no_outbound_calls():
+    async def fail(*a):raise AssertionError('unexpected network')
+    r,t=run('Me ajuda a retomar',CTX,'mock','', '', '', fail)
+    assert r['decision']=='orientar_full' and r['perception']=='mock' and t['llm_used']==False
+
+def test_groq_requires_access_code():
+    with pytest.raises(RequestRejected) as exc:run('Me ajuda a retomar',CTX,'groq','wrong',KEY,CODE,mock_transport)
+    assert exc.value.status==403
+
+def test_groq_requires_key():
+    with pytest.raises(RequestRejected):run('Me ajuda a retomar',CTX,'groq',CODE,'',CODE,mock_transport)
+
+def test_groq_classifier_live_shape():
+    r,t=run('Me ajuda a retomar',CTX,'groq',CODE,KEY,CODE,mock_transport)
+    assert t['llm_used'] and r['perception']=='groq' and r['decision']=='orientar_full'
+
+def test_rule_bypasses_llm_even_if_authenticated():
+    async def fail(*a):raise AssertionError('no outbound')
+    r,t=run('Me vigie e me puna',CTX,'groq',CODE,KEY,CODE,fail)
+    assert r['decision']=='limite_vigilancia' and not t['llm_used']
+
+def test_brasilapi_live_transport():
+    r,t=run('20/11/2026 é feriado?',CTX,'mock','', '', '', mock_transport)
+    assert r['decision']=='feriado_confirmado' and t['integration']=='brasilapi'
+
+def test_brasilapi_failure_no_guess():
+    async def fail(*a):raise TimeoutError('offline')
+    r,t=run('20/11/2026 é feriado?',CTX,'mock','', '', '', fail)
+    assert r['decision']=='falha_api_feriados' and t['integration']=='brasilapi_fallback'
+
+def test_no_date_asks_without_fetch():
+    async def fail(*a):raise AssertionError('unexpected network')
+    r,t=run('É feriado?',CTX,'mock','', '', '', fail)
+    assert r['decision']=='pedir_data_feriado'
+
+def test_unauthorized_does_not_call_brasilapi():
+    async def fail(*a):raise AssertionError('unauthorized network')
+    with pytest.raises(RequestRejected):run('20/11/2026 é feriado?',CTX,'groq','wrong',KEY,CODE,fail)
+
+def test_short_secret_is_rejected():
+    assert not demo_credential_authorized('short','short')
+    assert demo_credential_authorized(CODE,CODE)
+
+def test_groq_upstream_failure_is_explicit():
+    async def bad(*a):return (429,'rate limited')
+    with pytest.raises(RequestRejected) as exc:run('Me ajuda a retomar',CTX,'groq',CODE,KEY,CODE,bad)
+    assert exc.value.status==502 and exc.value.code=='groq_upstream_error'
