@@ -6,6 +6,8 @@ A única entrada enviada ao provedor é um ano (não há texto do usuário nem d
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import date
 from typing import Callable
@@ -29,8 +31,17 @@ class Feriado(BaseModel):
     @field_validator("name", mode="before")
     @classmethod
     def evitar_controle_e_instrucao_maliciosa(cls, name: str) -> str:
+        if not isinstance(name, str):
+            raise ValueError("Nome de feriado inválido")
         if any(ord(c) < 32 for c in name):
             raise ValueError("Nome contém caractere de controle")
+        # Defesa conservadora de integridade de exibição: o nome obtido
+        # externamente não pode carregar comandos explícitos. Não é um
+        # detector genérico de prompt injection nem concede autoridade ao dado.
+        plain = unicodedata.normalize("NFKD", name.casefold())
+        plain = "".join(c for c in plain if not unicodedata.combining(c))
+        if re.search(r"\b(ignore|desconsidere|revele|execute|apague|prompt|token|secret|senha)\b", plain):
+            raise ValueError("Nome contém padrão de instrução não confiável")
         return name
 
 
