@@ -1,5 +1,5 @@
 import json, asyncio, pytest
-from fio import Contexto
+from fio import Contexto, Modo
 from fio.worker_runtime import process_chat, RequestRejected, demo_credential_authorized
 
 CTX = Contexto(tarefa='apresentação', ponto_parada='slide 6', proximo_passo_confirmado='escrever a frase principal')
@@ -61,3 +61,17 @@ def test_groq_upstream_failure_is_explicit():
     async def bad(*a):return (429,'rate limited')
     with pytest.raises(RequestRejected) as exc:run('Me ajuda a retomar',CTX,'groq',CODE,KEY,CODE,bad)
     assert exc.value.status==502 and exc.value.code=='groq_upstream_error'
+
+def test_groq_full_vs_leve_without_confirmed_next_step():
+    """End-to-end regression for screenshot: same Groq classification, different assistance."""
+    context = dict(tarefa="finalizar o app fio", ponto_parada="configuração de secret")
+    msg = "fui pegar agua e esqueci oq ue fazer agora"
+    full, ft = run(msg, Contexto(**context, modo=Modo.FULL), 'groq', CODE, KEY, CODE, mock_transport)
+    leve, lt = run(msg, Contexto(**context, modo=Modo.LEVE), 'groq', CODE, KEY, CODE, mock_transport)
+    assert ft['llm_used'] and lt['llm_used']
+    assert full['perception'] == leve['perception'] == 'groq'
+    assert full['decision'] == 'orientar_full_sem_passo'
+    assert leve['decision'] == 'orientar_leve_sem_passo'
+    assert full['response'] != leve['response']
+    assert "Primeiro movimento:" in full['response']
+    assert "Prefere" in leve['response']
