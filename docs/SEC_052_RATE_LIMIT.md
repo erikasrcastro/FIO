@@ -11,10 +11,26 @@ O limite é **aproximado**, regional e de consistência eventual. Assim, seis re
 ## Procedimento
 
 1. Conferir que o Worker público responde com versão 0.5.2 e groq_rate_limit: configured.
-2. Baixar e ler o script scripts/SEC-052.ps1 deste repositório.
-3. Executar no PowerShell do Windows. O script solicita apenas FIO_DEMO_ACCESS_KEY via Read-Host -AsSecureString; nunca fornecer GROQ_API_KEY.
-4. Ele envia no máximo seis mensagens fictícias consecutivas, com a mesma chave de demonstração, por HTTPS ao Worker FIO.
+2. **Primeiro**, carregar o valor de FIO_DEMO_ACCESS_KEY no PowerShell com `$FioDemoKey = Read-Host 'Cole FIO_DEMO_ACCESS_KEY' -AsSecureString`. O valor é digitado de forma oculta e fica na variável SecureString, não no histórico de comandos. **Nunca** usar GROQ_API_KEY neste teste.
+3. **Depois**, baixar e ler o script `scripts/SEC-052.ps1` deste repositório; executar com `& $arquivo -DemoAccessKey $FioDemoKey`.
+4. Ele envia no máximo seis mensagens fictícias consecutivas por HTTPS ao Worker FIO. Não mostra ou salva a chave. Ao finalizar, descarte a variável com `$FioDemoKey.Dispose(); Remove-Variable FioDemoKey`.
 5. Copiar só as linhas Tentativa / HTTP / code / trace_id e a duração, sem compartilhar chaves nem mensagens pessoais.
+
+~~~powershell
+# ETAPA 1 — carregar secret em memória; o prompt não mostra os caracteres
+$FioDemoKey = Read-Host 'Cole o valor de FIO_DEMO_ACCESS_KEY' -AsSecureString
+
+# ETAPA 2 — obter o script, revisar e executar
+$url = 'https://raw.githubusercontent.com/erikasrcastro/FIO/main/scripts/SEC-052.ps1'
+$arquivo = Join-Path $env:TEMP 'SEC-052.ps1'
+Invoke-WebRequest -Uri $url -OutFile $arquivo
+notepad $arquivo
+& $arquivo -DemoAccessKey $FioDemoKey
+
+# ETAPA 3 — limpar chave da sessão após o teste
+$FioDemoKey.Dispose()
+Remove-Variable FioDemoKey
+~~~
 
 ## Interpretação
 
