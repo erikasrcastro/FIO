@@ -49,7 +49,36 @@ def test_r02_leve_para_full():
 def test_s01_passo_nao_confirmado_nao_inventado():
     a = FIOAgent(contexto=Contexto(tarefa="relatório", ponto_parada="resultados"))
     r = a.responder("Me ajuda a retomar")
-    assert r.decisao == "pedir_proximo_passo" and "Qual era" in r.resposta
+    assert r.decisao == "orientar_full_sem_passo"
+    assert "resultados" in r.resposta and "último item concluído" in r.resposta
+    assert "Próxima ação: " not in r.resposta
+
+
+def test_r03_regressao_print_full_leve_sem_proximo_passo():
+    # Mesmo input dos prints observados no deploy Groq: falta apenas o próximo passo.
+    mensagem = "fui pegar água e esqueci oq ue fazer agora"
+    comum = dict(tarefa="finalizar o app fio", ponto_parada="configuração de secret")
+    full = FIOAgent(contexto=Contexto(**comum, modo=Modo.FULL)).responder(mensagem)
+    leve = FIOAgent(contexto=Contexto(**comum, modo=Modo.LEVE)).responder(mensagem)
+    assert full.decisao == "orientar_full_sem_passo"
+    assert leve.decisao == "orientar_leve_sem_passo"
+    assert full.resposta != leve.resposta
+    assert "Primeiro movimento:" in full.resposta
+    assert "Prefere" in leve.resposta
+    assert "configuração de secret" in full.resposta and "configuração de secret" in leve.resposta
+    assert "GROQ_API_KEY" not in full.resposta and "GROQ_API_KEY" not in leve.resposta
+
+
+def test_r04_modularidade_com_contexto_parcial():
+    for modo in (Modo.FULL, Modo.LEVE):
+        contexto = Contexto(tarefa="finalizar o app fio", modo=modo)
+        r = FIOAgent(contexto=contexto).responder("me ajuda a retomar")
+        assert r.decisao == "pedir_ponto"
+        assert "finalizar o app fio" in r.resposta
+    full = FIOAgent(contexto=Contexto(modo=Modo.FULL)).responder("me perdi")
+    leve = FIOAgent(contexto=Contexto(modo=Modo.LEVE)).responder("me perdi")
+    assert full.decisao == leve.decisao == "pedir_contexto"
+    assert full.resposta != leve.resposta
 
 def test_s02_ponto_nao_confirmado_nao_inventado():
     assert FIOAgent(contexto=Contexto(tarefa="relatório")).responder("Me ajuda a retomar").decisao == "pedir_ponto"
