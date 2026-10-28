@@ -22,6 +22,12 @@ Uma interrupção pode fazer uma pessoa perder o ponto exato de uma tarefa. O FI
 
 Python · Pydantic · pytest · Groq API (adaptador opcional) · BrasilAPI (consulta opcional)
 
+## Demonstração web (Cloudflare Workers)
+
+O ponto de entrada `worker.py`, o `wrangler.toml` e a interface `web_ui.py` estão preparados para o **primeiro deploy de demonstração**. O Worker ainda não tem URL pública confirmada. Nesta etapa, a percepção é **simulada**; chamadas reais à Groq e BrasilAPI no Worker permanecem pendentes.
+
+Use `uv run pywrangler dev` para desenvolvimento e `uv run pywrangler deploy` para publicação (somente após revisão). A configuração completa está em [CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md).
+
 ## Execução local
 
 Requisitos: Python 3.10 ou superior.
