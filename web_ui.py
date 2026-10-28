@@ -76,7 +76,7 @@ form.addEventListener('submit', async (ev) => {
     const data=await r.json();
     if(!r.ok)throw new Error(data.error || 'Não foi possível concluir a solicitação.');
     out.textContent=data.response;
-    status.textContent='Decisão: '+data.decision+' · Modo: '+data.mode+' · Interpretação: '+data.perception+' · API externa: '+data.integration;
+    status.textContent='Decisão: '+data.decision+' · Modo: '+data.mode+' · Interpretação: '+data.perception+' · API de dados: '+(data.integration==='none'?'nenhuma':data.integration);
     document.getElementById('trace').textContent='Trace ID: '+data.trace_id;
   } catch(e){out.textContent='Ocorreu um erro: '+e.message;status.textContent='Falha tratada; tente novamente.'}
   finally{btn.disabled=false}
