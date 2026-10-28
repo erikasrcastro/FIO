@@ -32,7 +32,7 @@ Cada resposta válida inclui `groq_called: false` e `bucket: diagnostic_isolated
 ~~~powershell
 $FioDemoKey = ConvertTo-SecureString -String (Get-Clipboard -Raw).Trim() -AsPlainText -Force
 $FioDemoKey.Length
-Set-Clipboard -Value ""
+Set-Clipboard -Value "limpo"  # Windows PowerShell 5.1 nao aceita string vazia
 
 $url = "https://raw.githubusercontent.com/erikasrcastro/FIO/main/scripts/SEC-053.ps1"
 $arquivo = Join-Path $env:TEMP "SEC-053.ps1"
