@@ -6,12 +6,12 @@
 
 | Área | Estado factual | Evidência | Pendência |
 | --- | --- | --- | --- |
-| Interface e motor Python | Online, Worker **v0.5.2** | Health check e WEB-052 real aprovado | Ampliar testes funcionais |
+| Interface e motor Python | **v0.5.3 confirmada; v0.5.4 pronta em branch para deploy** | SEC-053 em produção + smoke e testes da v0.5.4 no CI | Verificar v0.5.4 no /healthz e executar REG-054 |
 | LLM Groq | **Integração real validada na v0.4.1**; Secrets reconhecidos na v0.5.2 | API-02 / REG-01; `llm: protected` | Repetir chamada real na v0.5.2 |
 | BrasilAPI | **Integração real validada** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` | Falha externa em produção |
 | Modos Full e Leve | **BUG-01 resolvido e retestado** | REG-01: orientações distintas com mesmo contexto | Amostra maior de evals |
-| Testes | **74 aprovados** | https://github.com/erikasrcastro/FIO/actions/runs/40724281556 | Testes de carga, integração e consistência |
-| Rate limiter | **SEC-052 inconclusivo** | Seis HTTP 200 em 9s com Groq; nenhum HTTP 429 observado | Diagnóstico sem novas chamadas Groq |
+| Testes | **107 aprovados no PR da v0.5.4** | https://github.com/erikasrcastro/FIO/actions/runs/40783617792 | Smoke de produção REG-054 |
+| Rate limiter | **SEC-053 APROVADO com binding isolado; SEC-052 inconclusivo com Groq** | 7 checks/6,1s; sétimo HTTP 429 diagnostic_rate_limited, sem Groq | Não prometer cota global rígida |
 | Observabilidade | **OBS-052 aprovado em produção** | Log JSON correlacionado ao trace `278311a6-e682-408c-814a-73446d6fa493` | Revisar métrica `duration_ms: 0` |
 | Analytics Engine | **Não habilitado** por decisão Free | `usage_analytics: not_enabled` | Nenhuma ação obrigatória |
 | Orçamento | **R$ 0**, Groq Free e Workers Free | Capturas privadas de ambas as assinaturas | Respeitar cotas |
@@ -49,4 +49,10 @@ Teste controlado executado em produção v0.5.2: seis chamadas Groq autorizadas 
 
 ## SEC-053 — Diagnóstico isolado do binding (código v0.5.3)
 
-Endpoint autenticado POST /api/diagnostics/rate-limit utiliza o mesmo binding FIO_GROQ_RATE com chave de contador separada, **sem** acionar Groq, BrasilAPI ou pagar recursos adicionais. O código e o script estão no GitHub; **deploy e teste real v0.5.3 ainda dependem de verificação**. O SEC-052 continua inconclusivo. [Roteiro SEC-053](SEC_053_RATE_DIAGNOSTIC.md).
+Endpoint autenticado POST /api/diagnostics/rate-limit utiliza o mesmo binding FIO_GROQ_RATE com chave de contador separada, **sem** acionar Groq, BrasilAPI ou pagar recursos adicionais. O código e o script estão no GitHub; **deploy v0.5.3 e teste SEC-053 foram confirmados**. O SEC-052 continua inconclusivo. [Roteiro SEC-053](SEC_053_RATE_DIAGNOSTIC.md).
+
+## Encerramento em andamento — release v0.5.4
+
+O evento SEC-053 em produção retornou 6 HTTP 200 e 1 HTTP 429 no contador isolado, sem chamadas Groq; registro com sete traces em EVIDENCIAS_SEGURANCA_2026-10-28.md. A rota temporária foi retirada no código v0.5.4. CI do pull request: **107 testes aprovados**. Falta verificar o deploy no Worker público e a regressão REG-054; o log SEC-053 no painel Cloudflare também precisa de conferência autenticada (não está disponível para leitura via conectores).
+
+Pacote final: [FECHAMENTO_FIAP_FASE3.md](FECHAMENTO_FIAP_FASE3.md) e [EVALS_FIO_FASE3.md](EVALS_FIO_FASE3.md). A rubrica exata da atividade na FIAP ainda não foi localizada.

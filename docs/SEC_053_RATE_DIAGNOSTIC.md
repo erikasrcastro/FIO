@@ -1,6 +1,6 @@
 # SEC-053 — Diagnóstico protegido da Cloudflare sem Groq
 
-**Implementação e prova real:** v0.5.3, publicada. Em 28/10/2026, SEC-053 APROVADO: 6 respostas HTTP 200 e a sétima HTTP 429 (`diagnostic_rate_limited`) em 6,1s, `groq_called=False` em todas. O bloqueio ocorreu no contador isolado. SEC-052 permanece inconclusivo.
+**Implementação e prova real:** v0.5.3, publicada. Em 28/10/2026, SEC-053 APROVADO: 6 HTTP 200, sétima HTTP 429 (`diagnostic_rate_limited`) em 6,1s, `groq_called=False` em todas. O bloqueio ocorreu no contador isolado. SEC-052 permanece inconclusivo. **Rota aposentada no código v0.5.4**; este procedimento é histórico e não deve ser reexecutado após o deploy.
 
 ## O que valida
 
@@ -53,3 +53,7 @@ O script confere a versão do Worker antes de qualquer POST: se a v0.5.3 não es
 Depois conferir no Workers Logs o trace ID do evento de diagnóstico. **Orçamento autorizado: R$ 0, somente Free.**
 
 Documentação oficial: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+
+## Resultado e encerramento
+
+**SEC-053 APROVADO:** em sete verificações reais, a última retornou HTTP 429, diagnostic_rate_limited, groq_called=False. Trace: `fe88ac72-a4c4-4739-a306-9c940856d096`. [Tabela e demais traces](EVIDENCIAS_SEGURANCA_2026-10-28.md). Não repetir; a publicação v0.5.4 removerá a rota. Ainda não há consulta autenticada ao painel Workers Logs confirmando o evento específico, mas a resposta HTTP está documentada.

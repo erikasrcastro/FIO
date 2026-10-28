@@ -4,7 +4,7 @@
 **Projeto:** FIO, assistente de retomada de tarefas interrompidas.  
 **Responsável:** Éricka Castro.  
 **Data do corte:** 28/10/2026.  
-**Status:** demonstração pública do Worker v0.5.2 confirmada; validação integral dos controles novos pendente.  
+**Status:** SEC-053 confirmado em produção v0.5.3; release v0.5.4 pronta em branch com 107 testes CI aprovados, aguardando verificação de publicação e smoke.  
 **Grupo:** FIO identificado como **Grupo 36 na Fase 1**; confirmar se a submissão atual da Fase 3 usa o mesmo número.
 
 ## 1. Problema e objetivo
@@ -89,9 +89,16 @@ Não ocultar esses incidentes: demonstram testes, identificação de causa raiz 
 - [x] Testes automatizados no CI.
 - [x] Documentação de segurança e restrição Free.
 - [x] Evidência operacional de logs após v0.5.2 (OBS-052, trace correlacionado).
-- [ ] Evidência operacional do rate limiter HTTP 429 (SEC-052 executado, inconclusivo).
+- [x] Evidência de recusa HTTP 429 pelo binding nativo (SEC-053 aprovado em contador isolado, sem Groq).
+- [ ] Teste SEC-052 específico do contador de produção Groq segue inconclusivo; não declarar cota global estrita.
 - [ ] Revisão final conforme rubrica/roteiro exato da entrega FIAP da Fase 3.
 
 ## 10. SEC-053 — Novo diagnóstico sem consumo de IA
 
-A arquitetura v0.5.3 adiciona uma rota autenticada para consultar o limitador Cloudflare sem invocar Groq, com chave de contador separada da de produção. O roteiro PowerShell está em [SEC_053_RATE_DIAGNOSTIC.md](SEC_053_RATE_DIAGNOSTIC.md). **Código implementado; implantação e execução real ainda pendentes de confirmação.** O SEC-052 anterior mantém resultado inconclusivo. Nenhum recurso pago foi habilitado.
+A arquitetura v0.5.3 adiciona uma rota autenticada para consultar o limitador Cloudflare sem invocar Groq, com chave de contador separada da de produção. O roteiro PowerShell está em [SEC_053_RATE_DIAGNOSTIC.md](SEC_053_RATE_DIAGNOSTIC.md). **Código implantado na v0.5.3 e teste real APROVADO.** Foram sete verificações em 6,1 segundos; a sétima foi HTTP 429 com diagnostic_rate_limited e groq_called=False. O SEC-052 anterior mantém resultado inconclusivo. Nenhum recurso pago foi habilitado.
+
+## 11. Fechamento da engenharia e avaliações
+
+O release v0.5.4 remove o endpoint de diagnóstico após registrar a prova SEC-053. A correção de segurança na integração BrasilAPI rejeita nomes de feriado externos com verbos de instrução explícitos; ver os testes para suas limitações. A matriz [EVAL-054](EVALS_FIO_FASE3.md) contém 16 casos determinísticos repetidos três vezes, além de verificações de memória isolada, falha e dados não confiáveis; o CI aprovou 107 testes. Isso não quantifica confiabilidade do Groq em produção. O pacote consolidado [FECHAMENTO_FIAP_FASE3.md](FECHAMENTO_FIAP_FASE3.md) é a referência de entrega, sujeito à rubrica oficial específica da Fase 3, ainda não identificada entre os materiais consultados.
+
+**Pendências externas:** confirmar que a v0.5.4 está publicada e executar o smoke REG-054 sem IA; conferir o último trace SEC-053 nos Workers Logs; conferir a rubrica institucional da atividade. A validação antiga SEC-052 permanece inconclusiva.

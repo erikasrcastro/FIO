@@ -1,3 +1,5 @@
+> [Fechamento técnico Fase 3](docs/FECHAMENTO_FIAP_FASE3.md) | [Matriz EVAL-054](docs/EVALS_FIO_FASE3.md)
+
 # FIO — Retomada inteligente de tarefas
 
 [![Testes Python](https://github.com/erikasrcastro/FIO/actions/workflows/tests.yml/badge.svg)](https://github.com/erikasrcastro/FIO/actions/workflows/tests.yml)
@@ -26,7 +28,7 @@ Python · Pydantic · pytest · Groq API (adaptador opcional) · BrasilAPI (cons
 
 **Aplicação pública:** https://fio.erika-srcastro.workers.dev/ · [Health check](https://fio.erika-srcastro.workers.dev/healthz).
 
-**Estado em 28/10/2026:** v0.5.2 está **online**. A integração real com BrasilAPI foi verificada (API-01) e a integração real Groq foi verificada com dois modos na v0.4.1 (API-02 e REG-01). Na v0.5.2, `/healthz` confirma o binding de limite e Workers Logs configurados; os testes operacionais de bloqueio 429 e do painel de logs ainda estão pendentes.
+**Estado no fechamento de 28/10/2026:** v0.5.3 foi verificada em produção: SEC-053 comprovou HTTP 429 do binding Cloudflare, em contador isolado e sem chamada Groq; SEC-052 no contador Groq continua inconclusivo. O release v0.5.4 remove a rota temporária de diagnóstico e inclui EVAL-054 (107 testes CI aprovados), pendente de verificação de deploy e smoke de produção.
 
 **[Comece pelo relatório acadêmico da Fase 3](docs/ENTREGA_FIAP_FASE3.md)**, depois [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [protocolo](docs/VALIDACAO.md) e [segurança](docs/SEGURANCA_CONSUMO.md).
 
@@ -57,8 +59,8 @@ Os exemplos acima funcionam **sem rede**, usando um classificador de intenção 
 ## Evidências e maturidade
 
 - **Fase 2:** oito cenários individuais; não demonstram consistência estatística.
-- **Fase 3:** chamadas reais à BrasilAPI e ao Groq no Worker, bug Full/Leve corrigido em produção, e CI com **74 testes aprovados**.
-- **v0.5.2:** implantação online e bindings reconhecidos; aguardam comprovação operacional o HTTP 429 do limitador, os registros no painel Workers Logs e nova chamada Groq após o deploy.
+- **Fase 3:** chamadas reais à BrasilAPI e ao Groq no Worker, bug Full/Leve corrigido em produção; CI **107 testes aprovados** no release v0.5.4.
+- **v0.5.3:** SEC-053 recebeu HTTP 429 real do binding em contador isolado, zero Groq. OBS-052 já havia correlacionado log e UI. **v0.5.4:** rota de diagnóstico aposentada no código; smoke público pendente.
 - **Política financeira:** Groq Free e Workers Free confirmados pela responsável; orçamento R$ 0. Analytics Engine desligado.
 
 Consulte o [relatório completo da Fase 3](docs/ENTREGA_FIAP_FASE3.md).

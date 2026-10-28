@@ -61,4 +61,10 @@ Para testes locais com rede, executar `uv run python demo_api_real.py`; para Gro
 
 ## SEC-053 — Diagnóstico seguro sem inferência
 
-O endpoint protegido da versão v0.5.3 consulta o binding real com uma chave independente, sem consumir quota Groq. A evidência atual compreende código, testes simulados e CI; não inclui prova de bloqueio 429 no novo endpoint. **Resultado operacional: pendente.** [Procedimento PowerShell](SEC_053_RATE_DIAGNOSTIC.md).
+O endpoint protegido da versão v0.5.3 consulta o binding real com uma chave independente, sem consumir quota Groq. A evidência atual compreende código, testes simulados e CI; não inclui prova de bloqueio 429 no novo endpoint. **Resultado operacional: APROVADO na v0.5.3 (7 checks, 6 HTTP 200, 1 HTTP 429, sem Groq).** [Procedimento PowerShell](SEC_053_RATE_DIAGNOSTIC.md).
+
+## EVAL-054 e REG-054 — fechamento
+
+Matriz de 16 cenários em três repetições determinísticas, mais testes complementares de contexto isolado e dados externos: [EVALS_FIO_FASE3.md](EVALS_FIO_FASE3.md). **GitHub Actions aprovou 107 testes** no pull request de release v0.5.4: https://github.com/erikasrcastro/FIO/actions/runs/40783617792. A regressão offline não demonstra taxa estatística de acerto da LLM real.
+
+Na v0.5.4, a rota de diagnóstico SEC-053 está removida do código e deve responder HTTP 404; o script [REG-054.ps1](../scripts/REG-054.ps1) confirma em produção health, UI e Full/Leve simulados sem credenciais. **Regressão pública: pendente até publicar v0.5.4.** O evento SEC-053 ainda requer inspeção dos Workers Logs por conta autenticada.
