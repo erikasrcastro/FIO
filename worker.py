@@ -1,7 +1,6 @@
-"""Cloudflare Python Worker — ponto de entrada da demonstração do FIO.
+"""FIO Cloudflare Worker: HTML, backend, Groq gated API and BrasilAPI live.
 
-O MVP usa interpretação simulada; nem a credencial Groq nem as mensagens
-dos usuários são registradas nos logs. Não há memória entre solicitações.
+No conversations or secret values are logged. Requests have no durable memory.
 """
 import json
 import time
@@ -10,11 +9,11 @@ from urllib.parse import urlparse
 from workers import WorkerEntrypoint, Response
 
 from fio import FIOAgent, Contexto, Modo
-from fio.perception import normalizar
+from fio.worker_runtime import process_chat, RequestRejected
 from web_ui import PAGE
 
 MAX_REQUEST_BYTES = 4096
-VERSION = "fio-worker-mvp-0.3.2"
+VERSION = "fio-worker-mvp-0.4.0"
 
 
 def json_response(data: dict, status: int = 200):
@@ -27,10 +26,24 @@ def json_response(data: dict, status: int = 200):
     )
 
 
+
+async def transport_http(url: str, method: str, headers: dict, body: str | None, timeout_ms: int):
+    """Cloudflare's native async fetch, not urllib.request (unsupported in Workers)."""
+    from js import fetch as js_fetch, Object, AbortSignal
+    from pyodide.ffi import to_js
+    options = to_js({"method": method, "headers": headers}, dict_converter=Object.fromEntries)
+    if body is not None:
+        options.body = body
+    options.signal = AbortSignal.timeout(timeout_ms)
+    response = await js_fetch(url, options)
+    text = str(await response.text())
+    return int(response.status), text
+
+
 def validate_input(body):
     if not isinstance(body, dict):
         raise ValueError("Requisição deve conter um objeto JSON")
-    allowed = {"mode", "task", "stop_point", "next_step", "message"}
+    allowed = {"mode", "task", "stop_point", "next_step", "message", "provider"}
     if not set(body).issubset(allowed):
         raise ValueError("Campos desconhecidos")
     msg = body.get("message", "")
@@ -43,12 +56,15 @@ def validate_input(body):
     modo = body.get("mode", "full")
     if modo not in ("full", "leve"):
         raise ValueError("Modo deve ser 'full' ou 'leve'")
+    provider = body.get("provider", "mock")
+    if provider not in ("mock", "groq"):
+        raise ValueError("Provedor inválido")
     return msg, Contexto(
         tarefa=body.get("task") or None,
         ponto_parada=body.get("stop_point") or None,
         proximo_passo_confirmado=body.get("next_step") or None,
         modo=Modo(modo),
-    )
+    ), provider
 
 
 class Default(WorkerEntrypoint):
@@ -58,8 +74,12 @@ class Default(WorkerEntrypoint):
         method = str(request.method).upper()
 
         if path == "/healthz" and method == "GET":
+            from fio.worker_runtime import demo_credential_authorized
+            key_present = bool(str(getattr(self.env, "GROQ_API_KEY", "") or ""))
+            demo_code = str(getattr(self.env, "FIO_DEMO_ACCESS_KEY", "") or "")
             return json_response({"ok": True, "version": VERSION,
-                                  "llm": "not_enabled", "session_memory": "none"})
+                                  "llm": "protected" if key_present and len(demo_code) >= 24 else "locked",
+                                  "session_memory": "none", "external_api": "brasilapi_enabled"})
 
         if path == "/" and method == "GET":
             return Response(PAGE, headers={
@@ -90,30 +110,32 @@ class Default(WorkerEntrypoint):
         start = time.monotonic()
         decision = "validation_error"
         status = 400
+        event_info = {}
         try:
             # Lê no máximo 4 KB declarados; também verifica conteúdo decodificado.
             raw = await request.text()
             if len(str(raw).encode("utf-8")) > MAX_REQUEST_BYTES:
                 return json_response({"error": "Corpo da requisição excede o limite"}, 413)
-            msg, context = validate_input(json.loads(str(raw)))
-            # A integração BrasilAPI depende de um adaptador HTTP assíncrono;
-            # não executamos urllib.request na runtime Pyodide.
-            if "feriad" in normalizar(msg):
-                decision = "api_pending"
-                status = 200
-                answer = ("Nesta versão de demonstração a consulta real de feriados ainda não está habilitada. "
-                          "A integração será ativada após validação do adaptador HTTP na Cloudflare.")
-                return json_response({"response": answer, "decision": decision, "mode": context.modo.value,
-                                      "perception": "mock", "trace_id": trace_id})
-            agent = FIOAgent(contexto=context)
-            result = agent.responder(msg)
-            decision = result.decisao
+            msg, context, provider = validate_input(json.loads(str(raw)))
+            groq_key = str(getattr(self.env, "GROQ_API_KEY", "") or "")
+            demo_code = str(getattr(self.env, "FIO_DEMO_ACCESS_KEY", "") or "")
+            supplied_code = str(request.headers.get("x-fio-demo-key") or "")
+            result, observed = await process_chat(
+                msg, context, provider, supplied_code, groq_key, demo_code, transport_http
+            )
+            decision = result["decision"]
+            event_info = observed
             status = 200
-            return json_response({"response": result.resposta, "decision": result.decisao,
-                                  "mode": result.modo.value, "perception": "mock",
-                                  "trace_id": trace_id})
+            result["trace_id"] = trace_id
+            return json_response(result)
+        except RequestRejected as exc:
+            decision = exc.code
+            status = exc.status
+            return json_response({"error": exc.description, "code": exc.code, "trace_id": trace_id}, exc.status)
         except (ValueError, TypeError, json.JSONDecodeError):
-            return json_response({"error": "Entrada inválida"}, 400)
+            decision = "validation_error"
+            status = 400
+            return json_response({"error": "Entrada inválida", "trace_id": trace_id}, 400)
         except Exception:
             decision = "internal_error"
             status = 500
@@ -123,4 +145,6 @@ class Default(WorkerEntrypoint):
             print(json.dumps({"trace_id": trace_id, "event": "response",
                               "decision": decision, "status": status,
                               "duration_ms": round((time.monotonic() - start)*1000, 2),
-                              "version": VERSION}))
+                              "version": VERSION, "perception": event_info.get("perception", "none"),
+                              "external": event_info.get("integration", "none"),
+                              "provider_status": event_info.get("provider_status")}))
