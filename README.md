@@ -34,7 +34,7 @@ Requisitos para o projeto completo e Cloudflare Workers: Python 3.13 e [uv](http
 
 ~~~bash
 uv sync
-uv run pytest -q
+uv run python -m pytest -q
 uv run python demo.py
 uv run python demo_integracao.py
 ~~~

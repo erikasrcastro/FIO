@@ -13,7 +13,7 @@
 
 ~~~bash
 uv sync
-uv run pytest -q
+uv run python -m pytest -q
 uv run python demo.py
 uv run python demo_integracao.py
 # Somente em ambiente com rede:

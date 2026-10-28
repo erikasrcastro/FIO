@@ -20,4 +20,4 @@ jobs:
         with:
           enable-cache: true
       - name: Instalar dependências e rodar os testes definidos em pyproject.toml
-        run: uv run --group dev pytest -q
+        run: uv run --group dev python -m pytest -q
