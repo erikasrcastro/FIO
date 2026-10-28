@@ -91,3 +91,7 @@ Não ocultar esses incidentes: demonstram testes, identificação de causa raiz 
 - [x] Evidência operacional de logs após v0.5.2 (OBS-052, trace correlacionado).
 - [ ] Evidência operacional do rate limiter HTTP 429 (SEC-052 executado, inconclusivo).
 - [ ] Revisão final conforme rubrica/roteiro exato da entrega FIAP da Fase 3.
+
+## 10. SEC-053 — Novo diagnóstico sem consumo de IA
+
+A arquitetura v0.5.3 adiciona uma rota autenticada para consultar o limitador Cloudflare sem invocar Groq, com chave de contador separada da de produção. O roteiro PowerShell está em [SEC_053_RATE_DIAGNOSTIC.md](SEC_053_RATE_DIAGNOSTIC.md). **Código implementado; implantação e execução real ainda pendentes de confirmação.** O SEC-052 anterior mantém resultado inconclusivo. Nenhum recurso pago foi habilitado.

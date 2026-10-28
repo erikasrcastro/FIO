@@ -58,3 +58,7 @@ Para testes locais com rede, executar `uv run python demo_api_real.py`; para Gro
 - **DEP-052b:** confirmar que Groq e BrasilAPI seguem funcionando com runtime v0.5.2.
 
 **Critério final:** OBS-052 já foi aprovado; não declarar SG-01 concluído sem SEC-052 (429 real) e revalidação Groq na 0.5.2. Nenhum teste de carga agressivo em ambiente Free.
+
+## SEC-053 — Diagnóstico seguro sem inferência
+
+O endpoint protegido da versão v0.5.3 consulta o binding real com uma chave independente, sem consumir quota Groq. A evidência atual compreende código, testes simulados e CI; não inclui prova de bloqueio 429 no novo endpoint. **Resultado operacional: pendente.** [Procedimento PowerShell](SEC_053_RATE_DIAGNOSTIC.md).

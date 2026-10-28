@@ -93,3 +93,7 @@ Referências:
 **Veredito:** SEC-052 **INCONCLUSIVO**. Não é correto aprovar o bloqueio Cloudflare nem declarar falha definitiva apenas com este lote. A documentação oficial diz que a API de Rate Limiting é aproximada, regional e usa contadores eventualmente consistentes. Uma rajada pode ultrapassar 5/60s antes da sincronização: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/.
 
 **Decisão:** não repetir a rajada com chamadas Groq Free. Para avançar, propor um ensaio controlado da resposta do binding sem executar inferência da LLM, preservando acesso protegido, limite de chamadas baixo e nenhum serviço pago. A capacidade de cumprir um teto global rígido permanece não comprovada.
+
+## SEC-053 — Endpoint de diagnóstico protegido criado
+
+Versão de código v0.5.3 implementa `POST /api/diagnostics/rate-limit` autenticado pelo Secret demonstrativo existente. Usa `FIO_GROQ_RATE` com chave de contagem separada para não impactar o contador do Groq. Não faz chamadas LLM ou à BrasilAPI, e não ativa recursos pagos. Os testes locais cobrem auth, negação, falhas e isolamento. **Aguardar implantação e evidência do teste real; não marcar como aprovado ainda.** [Procedimento](SEC_053_RATE_DIAGNOSTIC.md).

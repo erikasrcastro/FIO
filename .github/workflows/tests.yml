@@ -31,4 +31,12 @@ jobs:
             $parseErrors | ForEach-Object { Write-Host $_.ToString() }
             exit 1
           }
-          Write-Host 'Sintaxe SEC-052 valida. Nenhuma chamada HTTP foi executada.'
+          Write-Host 'Sintaxe SEC-052 valida.'
+          $diagTokens = $null
+          $diagErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile('scripts/SEC-053.ps1', [ref]$diagTokens, [ref]$diagErrors) | Out-Null
+          if ($diagErrors.Count -gt 0) {
+            $diagErrors | ForEach-Object { Write-Host $_.ToString() }
+            exit 1
+          }
+          Write-Host 'Sintaxe SEC-053 valida. Nenhuma chamada HTTP foi executada.'

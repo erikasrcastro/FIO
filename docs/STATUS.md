@@ -46,3 +46,7 @@ Na execução `WEB-052`, o FIO retornou a decisão `orientar_full`, modo mock, H
 ## SEC-052 (28/10/2026)
 
 Teste controlado executado em produção v0.5.2: seis chamadas Groq autorizadas em 9 segundos, todas HTTP 200, sem HTTP 429. A consistência eventual do limitador Cloudflare permite excessos temporários. **Não aprovar SG-01 como proteção estrita de cota.** Próximo passo: validar binding sem consumir Groq. Detalhes no registro de evidências de segurança.
+
+## SEC-053 — Diagnóstico isolado do binding (código v0.5.3)
+
+Endpoint autenticado POST /api/diagnostics/rate-limit utiliza o mesmo binding FIO_GROQ_RATE com chave de contador separada, **sem** acionar Groq, BrasilAPI ou pagar recursos adicionais. O código e o script estão no GitHub; **deploy e teste real v0.5.3 ainda dependem de verificação**. O SEC-052 continua inconclusivo. [Roteiro SEC-053](SEC_053_RATE_DIAGNOSTIC.md).
