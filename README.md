@@ -4,7 +4,7 @@
 
 **Um assistente de IA para ajudar pessoas a retomarem o que estavam fazendo, sem vigilância, culpa ou falsas promessas de memória.**
 
-> Projeto acadêmico em evolução | FIAP — Tecnologia em Agentes Inteligentes | Grupo 36
+> Projeto acadêmico em evolução | FIAP — Tecnologia em Agentes Inteligentes | Grupo 16
 
 ## O problema
 
