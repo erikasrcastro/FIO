@@ -2,6 +2,7 @@
 import pytest
 from pydantic import ValidationError
 from fio import FIOAgent, Contexto, Modo, Percepcao
+from fio.live_api import StaticPerceptor
 
 def agente(modo=Modo.FULL):
     return FIOAgent(contexto=Contexto(tarefa="apresentação da pesquisa", ponto_parada="slide 6, seção de resultados", proximo_passo_confirmado="escrever uma frase com o resultado principal", modo=modo))
@@ -58,8 +59,9 @@ def test_r03_regressao_print_full_leve_sem_proximo_passo():
     # Mesmo input dos prints observados no deploy Groq: falta apenas o próximo passo.
     mensagem = "fui pegar água e esqueci oq ue fazer agora"
     comum = dict(tarefa="finalizar o app fio", ponto_parada="configuração de secret")
-    full = FIOAgent(contexto=Contexto(**comum, modo=Modo.FULL)).responder(mensagem)
-    leve = FIOAgent(contexto=Contexto(**comum, modo=Modo.LEVE)).responder(mensagem)
+    groq_classification = StaticPerceptor(Percepcao(intencao="retomar", confianca=0.97))
+    full = FIOAgent(contexto=Contexto(**comum, modo=Modo.FULL), perceptor=groq_classification).responder(mensagem)
+    leve = FIOAgent(contexto=Contexto(**comum, modo=Modo.LEVE), perceptor=groq_classification).responder(mensagem)
     assert full.decisao == "orientar_full_sem_passo"
     assert leve.decisao == "orientar_leve_sem_passo"
     assert full.resposta != leve.resposta
