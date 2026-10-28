@@ -1,0 +1,7 @@
+name = "fio"
+main = "worker.py"
+compatibility_date = "2026-10-28"
+compatibility_flags = ["python_workers"]
+
+[vars]
+FIO_ENV = "demo_mock"
