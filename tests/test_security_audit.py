@@ -40,14 +40,12 @@ def test_health_describes_actual_metrics_backend():
     assert '"metrics_backend": "workers_logs"' in WORKER
     assert '"usage_analytics": "configured"' in WORKER
 
-def test_diagnostic_route_is_protected_and_never_calls_groq():
-    assert 'if path == "/api/diagnostics/rate-limit":' in WORKER
-    segment = WORKER.split('if path == "/api/diagnostics/rate-limit":',1)[1].split('if path != "/api/chat":',1)[0]
-    assert "run_rate_diagnostic(expected, supplied, check)" in segment
-    assert 'x-fio-demo-key' in segment
-    assert "process_chat(" not in segment
-    assert "transport_http(" not in segment
-    assert '"groq_called": False' in segment
+def test_diagnostic_endpoint_not_exposed_after_retirement():
+    assert 'if path == "/api/diagnostics/rate-limit":' not in WORKER
+    assert 'from fio.rate_diagnostic import' not in WORKER
+    assert '"rate_diagnostic": "retired"' in WORKER
+    assert 'if path != "/api/chat":' in WORKER
+    assert 'VERSION = "fio-worker-mvp-0.5.4"' in WORKER
 
 def test_diagnostic_uses_existing_binding_only():
     from fio.rate_diagnostic import DIAGNOSTIC_LIMIT_KEY
