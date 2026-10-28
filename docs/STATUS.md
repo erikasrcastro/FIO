@@ -24,8 +24,12 @@
 
 ### Hardening de consumo e segurança (v0.5.0 — CI aprovado; implantação pendente)
 
-O código contém Rate Limiting nativo Cloudflare (5 chamadas Groq/minuto por localidade, aproximado), fail-closed, Analytics Engine para eventos categóricos e tokens, 71 testes automatizados, e novos testes de abuso e autenticação. A conta Groq precisa de orçamento e alertas configurados separadamente pela responsável se o plano permitir. **Na última consulta externa, o domínio público ainda devolvia v0.4.1; portanto esses controles ainda não estavam verificados em produção.**
+O código contém Rate Limiting nativo Cloudflare (5 chamadas Groq/minuto por localidade, aproximado), fail-closed, Analytics Engine para eventos categóricos e tokens, 71 testes automatizados, e novos testes de abuso e autenticação. Decisão financeira: **orçamento R$ 0**; exclusivamente Cloudflare Free e Groq Free, sem Developer, Workers Paid ou recursos faturáveis. **Na última consulta externa, o domínio público ainda devolvia v0.4.1; portanto esses controles ainda não estavam verificados em produção.**
 
 - [Plano de segurança e consumo](SEGURANCA_CONSUMO.md)
 - [Evidências SG-01 e checklist](EVIDENCIAS_SEGURANCA_2026-10-28.md)
 - [GitHub Actions — execução verde](https://github.com/erikasrcastro/FIO/actions/runs/40711170011)
+
+### Política Free (28/10/2026)
+
+A categoria gratuita do Groq impõe cotas nativas por organização (o limite oficial não é teto financeiro customizado). A implementação da v0.5.1 devolve HTTP 429 amigável ao atingir a quota do Groq e não faz retry. Confirmação das assinaturas exige checagem manual dos painéis. Se a Cloudflare exigir upgrade para algum binding, deve-se **cancelar a ativação**, não pagar.

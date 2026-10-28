@@ -31,13 +31,15 @@ No momento de escrita desta evidência o domínio https://fio.erika-srcastro.wor
 - [ ] Efetuar uma chamada Groq com código privado e examinar contagem de tokens (sem publicar segredo).
 - [ ] Fazer teste autorizado de limite com requisições sequenciais e demonstrar resposta 429; não efetuar teste de carga agressivo em produção.
 - [ ] Verificar que modo simulado não foi bloqueado.
-- [ ] Se plano Groq pago elegível, configurar limite financeiro em **Settings → Billing → Limits** e alertas — exige ação da proprietária.
+- [ ] Confirmar nos painéis que Cloudflare Workers e Groq estão **Free**, sem upgrade nem recurso faturável; orçamento autorizado **R$ 0**.
+- [ ] Validar teste offline Groq 429 e confirmar que não há retry automático.
 
-## Limitações do limitador
+## Limitações do limitador e restrição Free
 
-Cloudflare rate limiting opera com contadores aproximados, por localidade de execução, e não representa cap global absoluto. O teto financeiro da Groq, quando disponível, protege a organização inteira, não somente o FIO, e pode ter atraso de contabilização. Para cota mundial estrita: Cloudflare Durable Objects com controle transacional e segregação de credencial.
+Cloudflare Rate Limiting é aproximado e regional. O orçamento aprovado do FIO é **R$ 0**: a conta deverá permanecer Cloudflare Workers Free + Analytics Engine Free + Groq Free. Não ativar Durable Objects pagos nem elevar os limites comerciais. Se Groq retornar 429 por limite do plano gratuito, responder com indisponibilidade temporária e modo simulado, sem tentar novamente automaticamente.
 
 Referências:
 - https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
-- https://developers.cloudflare.com/analytics/analytics-engine/get-started/
-- https://console.groq.com/docs/spend-limits
+- https://developers.cloudflare.com/analytics/analytics-engine/pricing/
+- https://console.groq.com/docs/rate-limits
+- https://console.groq.com/docs/billing-faqs

@@ -154,3 +154,15 @@ def test_usage_is_not_exposed_in_user_response():
     assert telemetry['total_tokens'] == 90
     assert telemetry['prompt_tokens'] == 72
     assert 'total_tokens' not in response
+
+def test_groq_free_plan_429_no_retry_or_upgrade():
+    calls = []
+    async def free_quota(url, method, headers, body, timeout):
+        calls.append(url)
+        return (429, '{"error":"rate_limit_exceeded"}')
+    with pytest.raises(RequestRejected) as exc:
+        run('me ajuda a retomar', CTX, 'groq', CODE, KEY, CODE, free_quota)
+    assert exc.value.status == 429
+    assert exc.value.code == 'groq_free_quota_exceeded'
+    assert 'simulado' in exc.value.description
+    assert len(calls) == 1

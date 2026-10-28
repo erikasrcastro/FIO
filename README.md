@@ -78,3 +78,7 @@ Projeto de Éricka Castro, desenvolvido no curso de Tecnologia em Agentes Inteli
 O modelo Groq é protegido por `FIO_DEMO_ACCESS_KEY` e por um limitador nativo da Cloudflare de **5 chamadas/minuto por localidade de execução**, aplicado somente após validação da credencial e antes da chamada paga. Este limitador **não é uma cota financeira global rígida**: cada localização Cloudflare possui contagem aproximada. Se o binding faltar/falhar, chamadas Groq falham de forma segura; o modo simulado segue livre. Veja [plano de segurança e custos](docs/SEGURANCA_CONSUMO.md).
 
 Métricas: logs categóricos por `trace_id` e Analytics Engine no dataset `fio_usage_v1`, agregáveis por decisão/status, latência e tokens (`usage` retornado pelo Groq). **Não** registra mensagens, outputs da LLM, IP ou segredos no dataset. Tokens ausentes retornam 0 no evento, não equivalendo a 'consumo gratuito'. A configuração do dataset precisa ser confirmada no deploy real.
+
+## Somente Free — orçamento R$ 0 (decisão de 28/10/2026)
+
+Projeto autorizado exclusivamente nos planos gratuitos de Cloudflare Workers, Analytics Engine e Groq. Não contratar Developer, Workers Paid, Durable Objects pagos ou serviços adicionais com faturamento. Ao atingir as cotas do Groq Free, devolver HTTP 429 e oferecer modo simulado, **sem retry automático ou upgrade**. O código não verifica o plano comercial da conta; conferir a categoria real no painel do provedor. Ver [política financeira](docs/SEGURANCA_CONSUMO.md).

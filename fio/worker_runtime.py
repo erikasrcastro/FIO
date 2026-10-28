@@ -120,6 +120,10 @@ async def process_chat(message: str, context: Contexto, provider: str,
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {groq_api_key}",
             }, payload, 12000)
+            if service_status == 429:
+                # Plano Free da Groq: limite atingido, sem retries automaticos.
+                raise RequestRejected(429, "groq_free_quota_exceeded",
+                                      "Limite gratuito do Groq atingido. Use o modo simulado e tente mais tarde.")
             if service_status != 200:
                 raise RequestRejected(502, "groq_upstream_error", "Groq indisponível; tente novamente")
             perceived = parse_groq_completion(raw)
