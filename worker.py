@@ -13,7 +13,7 @@ from fio.worker_runtime import process_chat, RequestRejected
 from web_ui import PAGE
 
 MAX_REQUEST_BYTES = 4096
-VERSION = "fio-worker-mvp-0.4.0"
+VERSION = "fio-worker-mvp-0.4.1"
 
 
 def json_response(data: dict, status: int = 200):
