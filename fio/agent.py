@@ -26,11 +26,29 @@ class FIOAgent:
     def _retomar(self) -> Resultado:
         c = self.contexto
         if not c.tarefa:
-            return self._resultado("pedir_contexto", "Qual tarefa você quer retomar?")
+            if c.modo == Modo.FULL:
+                return self._resultado("pedir_contexto", "Qual tarefa você quer retomar? Diga apenas o nome dela para começarmos.")
+            return self._resultado("pedir_contexto", "Qual tarefa faz mais sentido retomar agora?")
         if not c.ponto_parada:
-            return self._resultado("pedir_ponto", f"Em que parte de {c.tarefa} você parou?")
+            if c.modo == Modo.FULL:
+                return self._resultado("pedir_ponto", f"Na tarefa '{c.tarefa}', em qual parte você parou? Basta indicar a etapa ou o trecho.")
+            return self._resultado("pedir_ponto", f"Pensando na tarefa '{c.tarefa}', qual parte você gostaria de reencontrar primeiro?")
         if not c.proximo_passo_confirmado:
-            return self._resultado("pedir_proximo_passo", f"Você estava em {c.ponto_parada}. Qual era a próxima ação concreta prevista nessa parte?")
+            # Nao sabemos qual era a proxima acao. Podemos orientar uma microacao
+            # segura, mas nunca afirmar um passo anterior que nao foi fornecido.
+            if c.modo == Modo.FULL:
+                return self._resultado(
+                    "orientar_full_sem_passo",
+                    f"Na tarefa '{c.tarefa}', você parou em '{c.ponto_parada}'. "
+                    "Primeiro movimento: volte a essa parte e confira o último item concluído, "
+                    "sem alterar nada ainda. Assim você recupera o ponto de retomada."
+                )
+            return self._resultado(
+                "orientar_leve_sem_passo",
+                f"Você parou em '{c.ponto_parada}' na tarefa '{c.tarefa}'. "
+                "Prefere rever o que já concluiu ou identificar o que falta nessa etapa? "
+                "Escolha só um desses caminhos."
+            )
         if c.modo == Modo.FULL:
             return self._resultado("orientar_full", f"Você estava em {c.ponto_parada}. Próxima ação: {c.proximo_passo_confirmado}.")
         return self._resultado("orientar_leve", f"Você estava em {c.ponto_parada}. Para começar a ação '{c.proximo_passo_confirmado}', qual é o menor movimento que você consegue fazer agora?")
