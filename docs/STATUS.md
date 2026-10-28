@@ -2,17 +2,22 @@
 
 | Componente | Situação | Evidência | Próximo passo |
 | --- | --- | --- | --- |
-| FIO v2, modos Full/Leve | Testado em oito cenários individuais | Capturas da Fase 2, fora deste repositório | Retestes independentes |
-| Motor Python v3.1 | Implementado localmente | 29 testes pytest aprovados | Revisão em CI |
-| BrasilAPI | Cliente implementado e testes mockados | Testes locais | Execução HTTP real |
-| Groq | Adaptador implementado | Sem evidência de chamada real neste estágio | Execução com chave protegida |
-| Cloudflare | URL pública do MVP v0.3.2 verificada em 28/10/2026 | GET /healthz e WEB-01 no modo mock confirmados | Validar novo deploy v0.4.0 e chamadas externas |
-| Observabilidade | Especificada | Relatório de testes local | Traces redigidos e métricas com ambiente real |
+| FIO v2, modos Full/Leve | Oito cenários individuais na Fase 2 | Capturas acadêmicas da Fase 2 | Avaliação de consistência em cenários novos |
+| Motor Python v0.4.1 | Implementado e testado em CI | 51 testes aprovados em `cc37177d`, regressão Full/Leve | Ampliar evals para variações de contexto |
+| BrasilAPI | **Integração real validada** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` | Testar indisponibilidade e datas inválidas em produção |
+| Groq | **Classificação real validada em interface** | API-02 e REG-01, trace IDs distintos | Medir custo, falhas e consistência |
+| Cloudflare | **Worker 0.4.1 público e operacional** | `/healthz` verificado externamente e 3 screenshots | Endurecer acesso, tráfego e observabilidade |
+| Full vs Leve com contexto parcial | **BUG-01 corrigido e revalidado** | REG-01: Full e Leve com mesmo contexto e respostas distintas | Monitorar regressões |
+| Observabilidade | Trace ID e eventos técnicos categóricos no Worker | IDs exibidos no frontend e documentação | Implementar dashboards, retenção e métricas agregadas |
 
-**O Worker inicial utiliza percepção simulada e impede consultas BrasilAPI até existir transporte HTTP assíncrono testado.**
+**O Worker atual admite mock e Groq protegido, e usa transporte HTTP assíncrono para a BrasilAPI. O modo Groq não deve ser divulgado sem rate limiting e controle de custos.**
 
-**Não afirmar deployment ou integração real como concluídos antes de apresentar URL, data, versão, logs saneados e evidência de execução.**
+**Escopo de validação:** a URL, versão e decisões com trace IDs foram verificadas; não houve auditoria dos logs internos Cloudflare, medições de custos ou testes de abuso. A evidência comprova cenários observados, não confiabilidade estatística.
 
-### Integrações v0.4.0
+### Evidências de produção e histórico
 
-Backend Python e testes para chamadas BrasilAPI/Groq publicados; Groq requer Secret independente `FIO_DEMO_ACCESS_KEY`. **A existência do código e a aprovação do CI não constituem evidência de chamada remota real.** A validação em produção será registrada com versão, trace ID, horário UTC e ambiente. Guia: [GROQ_ACTIVATION](GROQ_ACTIVATION.md).
+- [Registro de implantação e validação](EVIDENCIAS_CLOUDFLARE_2026-10-28.md).
+- v0.3.2: primeira versão pública e teste de retomada simulada WEB-01.
+- v0.4.0: API-01 BrasilAPI real; API-02 Groq real; detectado BUG-01 nos modos Full/Leve.
+- v0.4.1: REG-01 confirma **respostas distintas** para Full e Leve com mesmo contexto e Groq real.
+- 51 testes pytest aprovados no CI de correção: https://github.com/erikasrcastro/FIO/actions/runs/40707386497.
