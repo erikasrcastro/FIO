@@ -6,13 +6,13 @@
 
 | Área | Estado factual | Evidência | Pendência |
 | --- | --- | --- | --- |
-| Interface e motor Python | Online, Worker **v0.5.2** | `/healthz` consultado externamente em 28/10 | Testes funcionais pós-release |
+| Interface e motor Python | Online, Worker **v0.5.2** | Health check e WEB-052 real aprovado | Ampliar testes funcionais |
 | LLM Groq | **Integração real validada na v0.4.1**; Secrets reconhecidos na v0.5.2 | API-02 / REG-01; `llm: protected` | Repetir chamada real na v0.5.2 |
 | BrasilAPI | **Integração real validada** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` | Falha externa em produção |
 | Modos Full e Leve | **BUG-01 resolvido e retestado** | REG-01: orientações distintas com mesmo contexto | Amostra maior de evals |
 | Testes | **74 aprovados** | https://github.com/erikasrcastro/FIO/actions/runs/40724281556 | Testes de carga, integração e consistência |
 | Rate limiter | Configurado no Worker v0.5.2 | `groq_rate_limit: configured`; 5/60s por localidade | Confirmar bloqueio 429 no Worker real |
-| Observabilidade | Workers Logs Free configurados | `metrics_backend: workers_logs` | Confirmar eventos no painel |
+| Observabilidade | **OBS-052 aprovado em produção** | Log JSON correlacionado ao trace `278311a6-e682-408c-814a-73446d6fa493` | Revisar métrica `duration_ms: 0` |
 | Analytics Engine | **Não habilitado** por decisão Free | `usage_analytics: not_enabled` | Nenhuma ação obrigatória |
 | Orçamento | **R$ 0**, Groq Free e Workers Free | Capturas privadas de ambas as assinaturas | Respeitar cotas |
 | Memória | **Sem persistência** | `session_memory: none` | Não alegar memória durável |
@@ -27,7 +27,7 @@
 
 ## Limites das afirmações
 
-`llm: protected` prova que os dois Secrets são reconhecidos, **não** que a versão atual tenha feito uma inferência real. `groq_rate_limit: configured` prova presença do binding, **não** aplicação da cota em teste de produção. `metrics_backend: workers_logs` identifica configuração, **não** comprova que o painel recebeu um evento. Não extrapolar resultados mockados para operação real.
+`llm: protected` prova que os dois Secrets são reconhecidos, **não** que a versão atual tenha feito uma inferência real. `groq_rate_limit: configured` prova presença do binding, **não** aplicação da cota em teste de produção. `metrics_backend: workers_logs` isoladamente indica configuração; **OBS-052 comprovou um evento operacional real** na versão 0.5.2. Não extrapolar resultados mockados para operação real.
 
 ## Arquivos canônicos
 
@@ -38,3 +38,7 @@
 - [Evidências de segurança](EVIDENCIAS_SEGURANCA_2026-10-28.md)
 - [Incidente e correção](INCIDENTE_BUILD_2026-10-28.md)
 - [Segurança e política Free](SEGURANCA_CONSUMO.md)
+
+## Evento confirmado de observabilidade — OBS-052
+
+Na execução `WEB-052`, o FIO retornou a decisão `orientar_full`, modo mock, HTTP 200 e trace `278311a6-e682-408c-814a-73446d6fa493`. A responsável encontrou o mesmo trace no evento JSON do Workers Logs da Cloudflare, sem conteúdo pessoal, resposta textual ou segredos; `truncated=false`. **OBS-052 aprovado.** O campo `duration_ms=0` demanda revisão instrumental e não representa latência de rede.

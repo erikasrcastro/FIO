@@ -38,7 +38,9 @@ Veja [diagrama e contratos](ARQUITETURA.md).
 | REG-01 | Repetição Full/Leve após correção | **Aprovado**, Groq real na v0.4.1, com respostas distintas |
 | CI-74 | Testes Python no GitHub Actions | **74 aprovados** na execução [40724281556](https://github.com/erikasrcastro/FIO/actions/runs/40724281556) |
 | DEP-052 | `/healthz` na URL pública v0.5.2 | **Aprovado** para implantação e presença dos bindings |
-| SEC-052 / OBS-052 | Teste 429 e inspeção de Workers Logs | **Pendente** em produção |
+| WEB-052 | Retomada Full em v0.5.2 com percepção simulada | **Aprovado**, trace `278311a6-e682-408c-814a-73446d6fa493` |
+| OBS-052 | Verificação de evento JSON com mesmo trace no Workers Logs | **Aprovado**; status 200, versão 0.5.2, sem dados da conversa |
+| SEC-052 | Teste do bloqueio real por HTTP 429 | **Pendente** em produção |
 
 Traces do teste REG-01: **Full** `358592be-8c7c-410e-9090-514189413512`; **Leve** `b7134866-7fc3-4ef8-9d1a-3dfa0dbb2ed0`. O contexto foi idêntico nos dois modos.
 
@@ -61,7 +63,7 @@ Não ocultar esses incidentes: demonstram testes, identificação de causa raiz 
 
 ## 7. O que está pendente e o que não afirmamos
 
-**Pendente:** testar HTTP 429 do binding na versão viva, inspecionar eventos no painel Observability, repetir chamada Groq/BrasilAPI em v0.5.2, ampliar evals e verificar consistência com amostras repetidas. `/healthz` sozinho não comprova execução real dessas funções na v0.5.2.
+**Pendente:** testar HTTP 429 do binding na versão viva, repetir chamada Groq/BrasilAPI em v0.5.2, ampliar evals, verificar consistência com amostras repetidas e revisar a métrica de duração. **Observabilidade OBS-052 já foi comprovada:** o mesmo trace apareceu na interface e no Workers Logs da Cloudflare. `/healthz` sozinho não comprova execução real dessas funções na v0.5.2.
 
 **Fora do escopo:** memória persistente, agente observando a tela, integração com agenda/arquivos de usuário, execução autônoma de tarefas ou autenticação individual. O FIO é um protótipo acadêmico funcional, não serviço clínico nem produto pronto para processamento de dados sensíveis.
 
@@ -86,5 +88,6 @@ Não ocultar esses incidentes: demonstram testes, identificação de causa raiz 
 - [x] Demo web pública e health check v0.5.2.
 - [x] Testes automatizados no CI.
 - [x] Documentação de segurança e restrição Free.
-- [ ] Evidência operacional de limitador e logs após v0.5.2.
+- [x] Evidência operacional de logs após v0.5.2 (OBS-052, trace correlacionado).
+- [ ] Evidência operacional do rate limiter HTTP 429 (SEC-052).
 - [ ] Revisão final conforme rubrica/roteiro exato da entrega FIAP da Fase 3.

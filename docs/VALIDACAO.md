@@ -22,7 +22,9 @@
 | REG-01 | Worker v0.4.1 | Full `orientar_full_sem_passo` ≠ Leve `orientar_leve_sem_passo` | Aprovado; BUG-01 encerrado |
 | CI-74 | GitHub Python 3.13 | 74 testes passaram, run 40724281556 | Aprovado |
 | DEP-052 | Worker v0.5.2 | `/healthz` com `ok: true` e bindings reconhecidos | Aprovado apenas para implantação/configuração |
-| SEC-052 | Worker v0.5.2 | Bloqueio real por 429 e presença de evento Workers Logs | **Pendente** |
+| WEB-052 | Worker v0.5.2 | Interface mock Full retornou `orientar_full`, trace `278311a6-e682-408c-814a-73446d6fa493` | Aprovado |
+| OBS-052 | Worker v0.5.2 | Log real com o mesmo trace, `status: 200`, `truncated: false`, sem mensagem/credenciais no evento | **Aprovado** |
+| SEC-052 | Worker v0.5.2 | Bloqueio HTTP 429 em produção | **Pendente** |
 
 Consulte [o histórico completo de evidências](EVIDENCIAS_CLOUDFLARE_2026-10-28.md) e [evidências de segurança](EVIDENCIAS_SEGURANCA_2026-10-28.md).
 
@@ -51,8 +53,8 @@ Para testes locais com rede, executar `uv run python demo_api_real.py`; para Gro
 ## Próximos testes de aceite
 
 - **SEC-052:** 429 real sob cota por localidade; sem repetição automática e mock intacto.
-- **OBS-052:** um evento JSON no Observability → Workers Logs, sem conteúdo/credencial.
+- **OBS-052 (concluído):** evento JSON confirmado na Cloudflare, correlacionado à UI. `duration_ms=0` exige investigação futura.
 - **EVAL-052:** cenários de contexto ausente/parcial/completo, vigilância, diagnóstico, injeção de prompt, API indisponível; 3–5 repetições conforme custo disponível, com rubrica humana.
 - **DEP-052b:** confirmar que Groq e BrasilAPI seguem funcionando com runtime v0.5.2.
 
-**Critério final:** não declarar SG-01 concluído sem SEC/OBS verificados. Nenhum teste de carga agressivo em ambiente Free.
+**Critério final:** OBS-052 já foi aprovado; não declarar SG-01 concluído sem SEC-052 (429 real) e revalidação Groq na 0.5.2. Nenhum teste de carga agressivo em ambiente Free.

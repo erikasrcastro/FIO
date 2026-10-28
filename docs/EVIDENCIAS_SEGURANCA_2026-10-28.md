@@ -24,15 +24,46 @@ Controles de custo e segurança sobre a integração Groq. Backend Python/Cloudf
 
 ## Verificação de produção (parcial — implantação v0.5.2 comprovada)
 
-**Atualização de 28/10/2026:** o domínio https://fio.erika-srcastro.workers.dev/healthz **retorna v0.5.2** e informa presença do binding `FIO_GROQ_RATE`. A presença do binding não é prova do bloqueio HTTP 429; esse ensaio e a inspeção dos logs permanecem pendentes. Analytics Engine permanece intencionalmente desligado.
+**Atualização de 28/10/2026:** o domínio https://fio.erika-srcastro.workers.dev/healthz **retorna v0.5.2** e informa presença do binding `FIO_GROQ_RATE`. A presença do binding não é prova do bloqueio HTTP 429; esse ensaio permanece pendente. **A inspeção dos logs agora está comprovada em OBS-052**, com o trace correlacionado à UI. Analytics Engine permanece intencionalmente desligado.
 
 - [x] Confirmado em `/healthz`: `fio-worker-mvp-0.5.2`, `groq_rate_limit: configured`, `usage_analytics: not_enabled`, `metrics_backend: workers_logs`.
-- [ ] Confirmar evento JSON sanitizado em **Cloudflare → fio → Observability**. Não procurar dataset `fio_usage_v1`: Analytics Engine está desativado para não exigir habilitação da conta.
+- [x] **OBS-052 aprovado:** evento JSON sanitizado foi encontrado no Workers Logs, correlacionado ao `trace_id` de WEB-052. Analytics Engine continua desativado.
 - [ ] Efetuar uma chamada Groq com código privado e examinar contagem de tokens (sem publicar segredo).
 - [ ] Fazer teste autorizado de limite com requisições sequenciais e demonstrar resposta 429; não efetuar teste de carga agressivo em produção.
-- [ ] Verificar que modo simulado não foi bloqueado.
+- [x] **WEB-052 aprovado:** modo simulado Full respondeu em produção v0.5.2, sem credencial Groq.
 - [x] Confirmado em 28/10/2026 com **duas capturas de tela**: **Groq Free — $0 — Current Plan** (plano atual indicado no painel Groq) e **Cloudflare Workers Free — Active** (Billing → Subscriptions da Cloudflare). A captura Cloudflare também mostrava o domínio em **Free Plan — Active**, sem método de pagamento cadastrado. O plano Developer da Groq aparece como categoria paga não contratada. **Orçamento autorizado: R$ 0**. Imagens fornecidas pela proprietária e analisadas nesta conversa; não republicadas no repositório público para evitar exposição de dados de conta.
 - [ ] Validar teste offline Groq 429 e confirmar que não há retry automático.
+
+
+## OBS-052 — Workers Logs Free: evento operacional confirmado em produção
+
+**Data:** 28/10/2026, aproximadamente 13:44:38 BRT, conforme painel fornecido pela responsável. **Serviço:** `fio` / `POST /api/chat`. **Versão:** `fio-worker-mvp-0.5.2`.
+
+O teste `WEB-052` enviou uma requisição sintética no modo **Full + mock**, recebeu orientação contextual e retornou `trace_id: 278311a6-e682-408c-814a-73446d6fa493`. A responsável localizou no painel Cloudflare **Observability → Workers Logs** o evento JSON personalizado correspondente, que continha:
+
+```json
+{
+  "trace_id": "278311a6-e682-408c-814a-73446d6fa493",
+  "event": "response",
+  "decision": "orientar_full",
+  "version": "fio-worker-mvp-0.5.2",
+  "perception": "mock",
+  "external": "none",
+  "status": 200,
+  "duration_ms": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "total_tokens": 0
+}
+```
+
+Metadados Cloudflare relevantes, omitindo identificadores da conta: `scriptName: fio`, `eventType: fetch`, método `POST`, path `/api/chat`, `truncated: false`. O UUID da aplicação e o `$metadata.traceId` da Cloudflare são campos independentes, com valores diferentes; isso é esperado.
+
+**Rubrica OBS-052: APROVADO.** O registro do Worker foi encontrado no ambiente e correlacionado com a resposta da UI. O conteúdo compartilhado não inclui a mensagem da pessoa, resposta textual, IP, código de demonstração ou chave Groq. Isto comprova esse evento; não constitui auditoria de todos os logs produzidos.
+
+**Ressalva:** `duration_ms: 0` pode representar resolução ou localização do temporizador em Python/Workers; **não equivale à latência total medida na rede**. O valor exige ajuste futuro antes de uso como métrica de desempenho. Tokens 0 são esperados para o teste `mock` e não medem o consumo de uma inferência Groq real.
+
+**Próximo gate:** `SEC-052` — verificar bloqueio efetivo pelo rate limiter no ambiente Cloudflare, sem testes de carga agressivos e mantendo apenas planos Free.
 
 ## Limitações do limitador e restrição Free
 
