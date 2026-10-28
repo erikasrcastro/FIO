@@ -4,7 +4,7 @@
 
 **Um assistente de IA para ajudar pessoas a retomarem o que estavam fazendo, sem vigilância, culpa ou falsas promessas de memória.**
 
-> Projeto acadêmico em evolução | FIAP — Tecnologia em Agentes Inteligentes | Grupo 16
+> Projeto acadêmico em evolução | FIAP — Tecnologia em Agentes Inteligentes | FIO: Grupo 36 na Fase 1 (confirmar identificação para a Fase 3)
 
 ## O problema
 
@@ -24,9 +24,13 @@ Python · Pydantic · pytest · Groq API (adaptador opcional) · BrasilAPI (cons
 
 ## Demonstração web (Cloudflare Workers)
 
-O Worker está disponível em **https://fio.erika-srcastro.workers.dev/**. A versão inicial foi validada com percepção simulada. A nova camada **0.4.0** contém chamadas assíncronas à BrasilAPI e integração Groq com controle de acesso; cada integração só será marcada como validada depois dos testes remotos correspondentes.
+**Aplicação pública:** https://fio.erika-srcastro.workers.dev/ · [Health check](https://fio.erika-srcastro.workers.dev/healthz).
 
-Use `uv run pywrangler dev` para desenvolvimento e `uv run pywrangler deploy` para publicação (somente após revisão). A configuração completa está em [CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md).
+**Estado em 28/10/2026:** v0.5.2 está **online**. A integração real com BrasilAPI foi verificada (API-01) e a integração real Groq foi verificada com dois modos na v0.4.1 (API-02 e REG-01). Na v0.5.2, `/healthz` confirma o binding de limite e Workers Logs configurados; os testes operacionais de bloqueio 429 e do painel de logs ainda estão pendentes.
+
+**[Comece pelo relatório acadêmico da Fase 3](docs/ENTREGA_FIAP_FASE3.md)**, depois [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [protocolo](docs/VALIDACAO.md) e [segurança](docs/SEGURANCA_CONSUMO.md).
+
+Para publicar: `uv run pywrangler deploy`; para desenvolvimento local: `uv run pywrangler dev`. Não colocar `GROQ_API_KEY` nem `FIO_DEMO_ACCESS_KEY` no repositório. [Guia Cloudflare](docs/CLOUDFLARE_SETUP.md).
 
 ## Execução local
 
@@ -52,11 +56,12 @@ Os exemplos acima funcionam **sem rede**, usando um classificador de intenção 
 
 ## Evidências e maturidade
 
-- **Fase 2:** oito cenários comportamentais documentados, cada um com uma execução; não demonstram consistência estatística.
-- **Fase 3 — v3.1:** 29 testes locais aprovados em 28/10/2026; a integração externa foi testada com transporte simulado.
-- **Próxima validação:** confirmar o deploy v0.4.0 na Cloudflare, realizar chamadas reais às APIs e registrar traces. A chave Groq nunca é publicada; para ativar a experiência protegida é necessário também o Secret `FIO_DEMO_ACCESS_KEY`.
+- **Fase 2:** oito cenários individuais; não demonstram consistência estatística.
+- **Fase 3:** chamadas reais à BrasilAPI e ao Groq no Worker, bug Full/Leve corrigido em produção, e CI com **74 testes aprovados**.
+- **v0.5.2:** implantação online e bindings reconhecidos; aguardam comprovação operacional o HTTP 429 do limitador, os registros no painel Workers Logs e nova chamada Groq após o deploy.
+- **Política financeira:** Groq Free e Workers Free confirmados pela responsável; orçamento R$ 0. Analytics Engine desligado.
 
-Consulte [ativação Groq](docs/GROQ_ACTIVATION.md), [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [validação](docs/VALIDACAO.md), [observabilidade](docs/OBSERVABILIDADE.md) e [segurança](SECURITY.md).
+Consulte o [relatório completo da Fase 3](docs/ENTREGA_FIAP_FASE3.md).
 
 ## Estrutura
 
@@ -73,7 +78,7 @@ Projeto de Éricka Castro, desenvolvido no curso de Tecnologia em Agentes Inteli
 
 **Nota:** repositório público não significa produto em produção nem autorização para processar informações sensíveis. Os resultados acadêmicos distinguem simulação, execução local e integração real.
 
-## Segurança de consumo e métricas (v0.5.0)
+## Segurança de consumo e métricas (v0.5.2)
 
 O modelo Groq é protegido por `FIO_DEMO_ACCESS_KEY` e por um limitador nativo da Cloudflare de **5 chamadas/minuto por localidade de execução**, aplicado somente após validação da credencial e antes da chamada paga. Este limitador **não é uma cota financeira global rígida**: cada localização Cloudflare possui contagem aproximada. Se o binding faltar/falhar, chamadas Groq falham de forma segura; o modo simulado segue livre. Veja [plano de segurança e custos](docs/SEGURANCA_CONSUMO.md).
 
@@ -81,7 +86,7 @@ Métricas: **Workers Logs** (plano Free) com `trace_id`, decisão/status, latên
 
 ## Somente Free — orçamento R$ 0 (decisão de 28/10/2026)
 
-Projeto autorizado exclusivamente nos planos gratuitos de Cloudflare Workers, Analytics Engine e Groq. Não contratar Developer, Workers Paid, Durable Objects pagos ou serviços adicionais com faturamento. Ao atingir as cotas do Groq Free, devolver HTTP 429 e oferecer modo simulado, **sem retry automático ou upgrade**. O código não verifica o plano comercial da conta; conferir a categoria real no painel do provedor. Ver [política financeira](docs/SEGURANCA_CONSUMO.md).
+Projeto autorizado exclusivamente nos planos gratuitos de Cloudflare Workers e Groq; Analytics Engine está desativado. Não contratar Developer, Workers Paid, Durable Objects pagos ou serviços adicionais com faturamento. Ao atingir as cotas do Groq Free, devolver HTTP 429 e oferecer modo simulado, **sem retry automático ou upgrade**. O código não verifica o plano comercial da conta; conferir a categoria real no painel do provedor. Ver [política financeira](docs/SEGURANCA_CONSUMO.md).
 
 ### Recuperação de build Cloudflare — v0.5.2
 

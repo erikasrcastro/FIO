@@ -1,44 +1,37 @@
-# Cloudflare Workers — conexão do FIO
+# Execução Cloudflare Workers — FIO v0.5.2
 
-**Estado em 28/10/2026:** repositório com `worker.py`, `web_ui.py`, `pyproject.toml` e `wrangler.toml`. Worker e segredos ainda não foram confirmados na Cloudflare. Integração real Groq/BrasilAPI no Worker e deploy público permanecem não verificados.
+**Ambiente público verificado:** https://fio.erika-srcastro.workers.dev/healthz. O endpoint respondeu com `version: fio-worker-mvp-0.5.2`, `llm: protected`, `groq_rate_limit: configured`, `usage_analytics: not_enabled` e `metrics_backend: workers_logs` em 28/10/2026.
 
-## Responsabilidades
+## Configuração atual
 
-- GitHub: código, documentação, CI de testes. Não armazena chaves reais.
-- Cloudflare: executa o Worker Python, gerencia `GROQ_API_KEY` como Secret, hospeda a demo.
-- Groq: fornece serviço de modelo LLM; chave exclusiva de backend.
-- BrasilAPI: endpoint público de feriados; não requer credencial neste fluxo.
+- Repositório: `erikasrcastro/FIO`, branch `main`.
+- Worker: `fio`, Python Workers via Pywrangler.
+- Entrada: `worker.py`; ambiente em `wrangler.toml`.
+- Deploy command: `uv run pywrangler deploy`; preview: `uv run pywrangler preview`.
+- Segredos Cloudflare: `GROQ_API_KEY` (Groq Free) e `FIO_DEMO_ACCESS_KEY` (código de acesso da demo). Guardar valores exclusivamente no painel.
+- Rate limit: binding `FIO_GROQ_RATE`, 5 requisições por 60 segundos por localidade (aproximado).
+- Telemetria: Workers Logs Free ativados em `[observability]`. **Não** utiliza Analytics Engine.
+- URLs: `/` para interface, `/healthz` para status e `POST /api/chat` para processamento.
 
-## Passos de ativação (ação da proprietária no dashboard Cloudflare)
+## Etapas de implantação ou recuperação
 
-1. Abrir Cloudflare > **Workers & Pages** > **Create application** > **GitHub**.
-2. Autorizar o acesso da integração Cloudflare ao repositório `erikasrcastro/FIO` (escopo mínimo possível).
-3. Criar Worker de nome exato **`fio`** (igual ao `name` em `wrangler.toml`). Deixar **Build command vazio**, definir **Deploy command = `uv run pywrangler deploy`**, **Preview command = `uv run pywrangler preview`** e **Path = `/`**. Para o primeiro deploy, desativar Preview builds. O painel é público se Cloudflare Access estiver desligado. O Worker inicial está em modo mock sem custo de Groq.
-4. Depois do primeiro deploy bem-sucedido, em Worker > **Settings** > **Variables and Secrets** > **Add**, cadastrar `GROQ_API_KEY` como **Secret**; **o Worker inicial ainda não faz chamadas Groq**, por segurança. Não ativar inferência real antes dos limites de custo e dos testes.
-5. Nunca colar a chave no chat, README, `.env.example`, GitHub Actions logs ou no JavaScript servido ao navegador.
-6. Deploy inicial em `workers.dev`, acessar `/healthz` e testar o formulário. Esperado: `llm: not_enabled`. Integração Groq e BrasilAPI **não será afirmada como real no primeiro deploy**.
-7. Ativar limites de tráfego/orçamento e logs sanitizados antes de divulgar o link ao professor.
+1. Conectar repositório GitHub na Cloudflare e confirmar Worker de nome `fio`.
+2. Manter `wrangler.toml` sob controle de versão e segredos separados da árvore pública.
+3. Na integração Git, deixar Build command vazio, Deploy command `uv run pywrangler deploy` e Path `/`.
+4. Em Cloudflare → Worker → **Settings → Variables and Secrets**, confirmar que os dois nomes de Secret existem, sem expor valores.
+5. Em Deployments, verificar commit/resultado Ready. Abrir `/healthz` e conferir versão publicada.
+6. No painel **Observability**, verificar pelo menos um evento técnico sem dados privados; validar Groq protegido e mock com entradas fictícias.
+7. Em caso de falha, guardar trecho de log relevante e classificar: dependências, compatibilidade Pyodide, Secrets, bindings ou restrição do plano.
 
-## Atenção ao runtime
+## Histórico e diagnóstico
 
-O núcleo existente utiliza `urllib.request` e classes Python padrão. A compatibilidade com Cloudflare Python Workers **não está demonstrada**; chamadas de rede podem precisar de adaptadores baseados em `fetch` assíncrono e em bindings. Instalar `workers-py`/`pywrangler`, adicionar `python_workers` no Wrangler e executar testes em `pywrangler dev` antes de produção.
+- Primeira tentativa: `requirements.txt` incompatível com Pywrangler; dependências migraram para `pyproject.toml`.
+- v0.3.2 e v0.4.1: aplicação e integrações reais exercitadas na Cloudflare.
+- v0.5.1: falha `10089` porque `[[analytics_engine_datasets]]` requeria habilitar Analytics Engine na conta.
+- v0.5.2: removido binding obrigatório Analytics Engine; `[observability] enabled=true` para Workers Logs Free. **Deploy verificado**, porém ainda não foi comprovado o comportamento 429 nem a presença dos eventos no painel.
 
-## Configuração segura
+## Segurança e custo
 
-- Para desenvolvimento local com Wrangler: usar `.dev.vars` (ignorado no Git) e somente com valores reais na máquina da proprietária.
-- Para produção: Cloudflare Secrets, não variáveis de texto puro.
-- Para um deploy por Cloudflare Git integration, não precisamos duplicar `GROQ_API_KEY` em GitHub Secrets; só seria necessário um token de deploy do Cloudflare no GitHub se optássemos por GitHub Actions como provedor de deployment.
+`GROQ_API_KEY` nunca vai para navegador, GitHub, logs ou prints. `FIO_DEMO_ACCESS_KEY` é um código compartilhado de avaliação, **não** autenticação individual. Dados enviados ao Groq devem ser fictícios. O projeto opera apenas em Cloudflare Workers Free e Groq Free, orçamento R$ 0. **Não autorizar upgrades ou recursos com custo**.
 
-## Critérios para declarar integração real
-
-Registrar commit SHA, data UTC, domínio real, `trace_id`, status, latência e resultado de chamadas externas. Manter dados pessoais e tokens fora dos logs e evidências públicas.
-
-Documentação oficial: https://developers.cloudflare.com/workers/configuration/secrets/ e https://developers.cloudflare.com/workers/languages/python/ .
-
-## Atenção: validação do primeiro deploy
-
-Se a compilação Pyodide falhar, copie o erro do **Build log**, sem credenciais, e corrija o projeto antes de tentar publicar. O código foi versionado, mas o funcionamento específico no ambiente Cloudflare ainda não foi comprovado por build remoto.
-
-## Troubleshooting de build — 28/10/2026
-
-Falha observada na primeira tentativa: `requirements.txt exists. Delete the file to continue`. O Pywrangler atual exige declarações de dependência em `pyproject.toml`. Correção: arquivo `requirements.txt` retirado do repositório; `pytest` movido para o grupo `dev` de `pyproject.toml`; GitHub Actions passou a instalar/executar via `uv`. A Cloudflare poderá executar o deploy novamente a partir do novo commit. **A correção do código não comprova ainda que o deploy completo esteja funcionando.**
+[Guia de ativação Groq](GROQ_ACTIVATION.md) · [Incidente 10089](INCIDENTE_BUILD_2026-10-28.md) · [Evidências](EVIDENCIAS_CLOUDFLARE_2026-10-28.md)

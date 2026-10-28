@@ -1,39 +1,40 @@
-# Estado do projeto — 28/10/2026
+# Estado verificado do projeto — 28/10/2026
 
-| Componente | Situação | Evidência | Próximo passo |
+**Produto:** FIO — agente de retomada de tarefas. **Repositório:** https://github.com/erikasrcastro/FIO. **Demo:** https://fio.erika-srcastro.workers.dev/.
+
+## Matriz de prontidão
+
+| Área | Estado factual | Evidência | Pendência |
 | --- | --- | --- | --- |
-| FIO v2, modos Full/Leve | Oito cenários individuais na Fase 2 | Capturas acadêmicas da Fase 2 | Avaliação de consistência em cenários novos |
-| Motor Python v0.4.1 | Implementado e testado em CI | 51 testes aprovados em `cc37177d`, regressão Full/Leve | Ampliar evals para variações de contexto |
-| BrasilAPI | **Integração real validada** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` | Testar indisponibilidade e datas inválidas em produção |
-| Groq | **Classificação real validada em interface** | API-02 e REG-01, trace IDs distintos | Medir custo, falhas e consistência |
-| Cloudflare | **Worker 0.4.1 público e operacional** | `/healthz` verificado externamente e 3 screenshots | Endurecer acesso, tráfego e observabilidade |
-| Full vs Leve com contexto parcial | **BUG-01 corrigido e revalidado** | REG-01: Full e Leve com mesmo contexto e respostas distintas | Monitorar regressões |
-| Observabilidade | Trace ID e eventos técnicos categóricos no Worker | IDs exibidos no frontend e documentação | Implementar dashboards, retenção e métricas agregadas |
+| Interface e motor Python | Online, Worker **v0.5.2** | `/healthz` consultado externamente em 28/10 | Testes funcionais pós-release |
+| LLM Groq | **Integração real validada na v0.4.1**; Secrets reconhecidos na v0.5.2 | API-02 / REG-01; `llm: protected` | Repetir chamada real na v0.5.2 |
+| BrasilAPI | **Integração real validada** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` | Falha externa em produção |
+| Modos Full e Leve | **BUG-01 resolvido e retestado** | REG-01: orientações distintas com mesmo contexto | Amostra maior de evals |
+| Testes | **74 aprovados** | https://github.com/erikasrcastro/FIO/actions/runs/40724281556 | Testes de carga, integração e consistência |
+| Rate limiter | Configurado no Worker v0.5.2 | `groq_rate_limit: configured`; 5/60s por localidade | Confirmar bloqueio 429 no Worker real |
+| Observabilidade | Workers Logs Free configurados | `metrics_backend: workers_logs` | Confirmar eventos no painel |
+| Analytics Engine | **Não habilitado** por decisão Free | `usage_analytics: not_enabled` | Nenhuma ação obrigatória |
+| Orçamento | **R$ 0**, Groq Free e Workers Free | Capturas privadas de ambas as assinaturas | Respeitar cotas |
+| Memória | **Sem persistência** | `session_memory: none` | Não alegar memória durável |
 
-**O Worker atual admite mock e Groq protegido, e usa transporte HTTP assíncrono para a BrasilAPI. O modo Groq não deve ser divulgado sem rate limiting e controle de custos.**
+## Registro cronológico e mudanças
 
-**Escopo de validação:** a URL, versão e decisões com trace IDs foram verificadas; não houve auditoria dos logs internos Cloudflare, medições de custos ou testes de abuso. A evidência comprova cenários observados, não confiabilidade estatística.
+- **v0.3.2:** primeiro deploy e frontend funcional (WEB-01).
+- **v0.4.0:** chamadas reais Groq e BrasilAPI; BUG-01 identificado (Full e Leve iguais com próximo passo vazio).
+- **v0.4.1:** BUG-01 corrigido e retestado em produção (REG-01).
+- **v0.5.0–v0.5.1:** controles de consumo e testes; tentativa de deploy falhou por binding Analytics Engine não ativado (INC-002, Cloudflare 10089).
+- **v0.5.2:** configuração simplificada sem Analytics Engine; deploy público confirmado e endpoints indicam Rate Limiting e Workers Logs habilitados. CI: 74 testes aprovados.
 
-### Evidências de produção e histórico
+## Limites das afirmações
 
-- [Registro de implantação e validação](EVIDENCIAS_CLOUDFLARE_2026-10-28.md).
-- v0.3.2: primeira versão pública e teste de retomada simulada WEB-01.
-- v0.4.0: API-01 BrasilAPI real; API-02 Groq real; detectado BUG-01 nos modos Full/Leve.
-- v0.4.1: REG-01 confirma **respostas distintas** para Full e Leve com mesmo contexto e Groq real.
-- 51 testes pytest aprovados no CI de correção: https://github.com/erikasrcastro/FIO/actions/runs/40707386497.
+`llm: protected` prova que os dois Secrets são reconhecidos, **não** que a versão atual tenha feito uma inferência real. `groq_rate_limit: configured` prova presença do binding, **não** aplicação da cota em teste de produção. `metrics_backend: workers_logs` identifica configuração, **não** comprova que o painel recebeu um evento. Não extrapolar resultados mockados para operação real.
 
-### Hardening de consumo e segurança (v0.5.0 — CI aprovado; implantação pendente)
+## Arquivos canônicos
 
-O código contém Rate Limiting nativo Cloudflare (5 chamadas Groq/minuto por localidade, aproximado), fail-closed, Analytics Engine para eventos categóricos e tokens, 71 testes automatizados, e novos testes de abuso e autenticação. Decisão financeira: **orçamento R$ 0**; exclusivamente Cloudflare Free e Groq Free, sem Developer, Workers Paid ou recursos faturáveis. **Na última consulta externa, o domínio público ainda devolvia v0.4.1; portanto esses controles ainda não estavam verificados em produção.**
-
-- [Plano de segurança e consumo](SEGURANCA_CONSUMO.md)
-- [Evidências SG-01 e checklist](EVIDENCIAS_SEGURANCA_2026-10-28.md)
-- [GitHub Actions — execução verde](https://github.com/erikasrcastro/FIO/actions/runs/40711170011)
-
-### Política Free (28/10/2026)
-
-A categoria gratuita do Groq impõe cotas nativas por organização (o limite oficial não é teto financeiro customizado). A implementação da v0.5.1 devolve HTTP 429 amigável ao atingir a quota do Groq e não faz retry. Confirmação das assinaturas exige checagem manual dos painéis. Se a Cloudflare exigir upgrade para algum binding, deve-se **cancelar a ativação**, não pagar.
-
-### Incidente de deploy Cloudflare 10089 — correção v0.5.2
-
-O build em 28/10/2026 processou Python e Wrangler, reconheceu `FIO_GROQ_RATE` (5/60s) e `FIO_ANALYTICS`, mas **falhou ao publicar** com erro `10089` porque Analytics Engine não havia sido ativado para a conta. A correção v0.5.2 remove esse binding de `wrangler.toml` e habilita **Workers Logs Free**, mantendo o limitador de requisições Groq. Novo deploy e validacão de produção permanecem pendentes até confirmar `/healthz`. [Laudo do incidente](INCIDENTE_BUILD_2026-10-28.md).
+- [Entrega FIAP Fase 3](ENTREGA_FIAP_FASE3.md)
+- [Arquitetura](ARQUITETURA.md)
+- [Protocolo de validação](VALIDACAO.md)
+- [Evidências de produção](EVIDENCIAS_CLOUDFLARE_2026-10-28.md)
+- [Evidências de segurança](EVIDENCIAS_SEGURANCA_2026-10-28.md)
+- [Incidente e correção](INCIDENTE_BUILD_2026-10-28.md)
+- [Segurança e política Free](SEGURANCA_CONSUMO.md)

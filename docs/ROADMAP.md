@@ -1,8 +1,27 @@
-# Roadmap de engenharia
+# Roadmap do FIO — progresso real e próximos gates
 
-1. **Base versionada:** disponibilizar o código Python, testes, documentação e regras de segurança.
-2. **Integração real:** executar BrasilAPI e Groq com credenciais protegidas; registrar traces e falhas sem informações sensíveis.
-3. **Demo web:** adaptar o backend ao Cloudflare Workers Python ou dividir frontend Pages e backend Python compatível; proteger custos e requisições.
-4. **Observabilidade:** IDs de correlação, latência, classificação de falhas, dashboards e retenção explícita.
-5. **Evals:** regressões dos 8 cenários, amostragem repetida e critérios de aprovação documentados.
-6. **Entrega FIAP:** link de demonstração, commit, evidências verificáveis, relatório de limitações.
+Atualizado em **28/10/2026**. Estados baseados no GitHub, CI e execução pública, não em funcionalidades presumidas.
+
+| Marco | Estado | Evidência |
+| --- | --- | --- |
+| Identidade, guardrails e dois modos | **Concluído no MVP** | Testes Fase 2; REG-01 em produção com Full ≠ Leve |
+| API externa real (BrasilAPI) | **Validado em produção** | API-01, trace `2d46a92f-e7d0-4798-a017-59dade03fc1c` |
+| LLM Groq integrada à decisão Python | **Validado em produção na v0.4.1** | API-02, REG-01; `perception: groq` |
+| UI pública e backend em Cloudflare | **v0.5.2 online** | `/healthz` confirmou a versão |
+| Testes automatizados | **74 aprovados** | GitHub Actions `40724281556` |
+| Secrets e controle de acesso à demo Groq | **Configurados e uso anterior validado** | Capturas Groq real e `llm: protected` |
+| Rate limiting nativo | **Binding reconhecido** | `groq_rate_limit: configured`; comportamento 429 em produção **não testado** |
+| Workers Logs | **Declarados e endpoint indica backend** | `metrics_backend: workers_logs`; conteúdo no painel **a validar** |
+| Recuperação de falhas externas | **Testada em mocks** | pytest; cenários reais de falha controlada **pendentes** |
+| Segurança ofensiva e consistência | **Parcial** | Casos automatizados; sem pentest, sem estudo estatístico |
+| Pacote FIAP Fase 3 | **Em atualização** | [entrega consolidada](ENTREGA_FIAP_FASE3.md) |
+
+## Próximos gates sem custos
+
+1. **OPS-01:** abrir Cloudflare → Worker `fio` → Observability e confirmar logs JSON saneados; capturar evidência *sem mensagens ou Secrets*.
+2. **SEC-02:** executar teste autorizado e leve de esgotamento da cota Groq no Worker e verificar HTTP 429, sem sobrecarga; conferir que o modo simulado continua utilizável.
+3. **EVAL-02:** repetir cenários Full/Leve com contexto ausente, incompleto e completo; registrar variabilidade, guardrails, erros e avaliação humana.
+4. **FIAP-03:** organizar link, commit de referência, relatório técnico, vídeo ou imagens permitidas, testes e limitações, mantendo todos os entregáveis em PT-BR.
+5. **Futuro (fora do escopo obrigatório):** conversação multi-turno por sessão consentida, melhorias de acessibilidade, cota global rígida apenas se houver opção gratuita comprovada.
+
+**Não implementado:** monitoramento contínuo do usuário, memória persistente, execução autônoma em aplicativos, leitura de tela ou priorização automática. Não sugerir essas capacidades como se já existissem.
