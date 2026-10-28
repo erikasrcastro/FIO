@@ -52,7 +52,7 @@ Para testes locais com rede, executar `uv run python demo_api_real.py`; para Gro
 
 ## Próximos testes de aceite
 
-- **SEC-052:** 429 real sob cota por localidade; sem repetição automática e mock intacto.
+- **SEC-052 (roteiro disponível):** realizar teste controlado pelo [script PowerShell](SEC_052_RATE_LIMIT.md), até 6 chamadas, e confirmar HTTP 429 com código groq_rate_limited. Ainda pendente de comprovação em produção.
 - **OBS-052 (concluído):** evento JSON confirmado na Cloudflare, correlacionado à UI. `duration_ms=0` exige investigação futura.
 - **EVAL-052:** cenários de contexto ausente/parcial/completo, vigilância, diagnóstico, injeção de prompt, API indisponível; 3–5 repetições conforme custo disponível, com rubrica humana.
 - **DEP-052b:** confirmar que Groq e BrasilAPI seguem funcionando com runtime v0.5.2.
