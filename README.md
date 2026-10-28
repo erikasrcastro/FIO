@@ -1,5 +1,7 @@
 # FIO — Retomada inteligente de tarefas
 
+[![Testes Python](https://github.com/erikasrcastro/FIO/actions/workflows/tests.yml/badge.svg)](https://github.com/erikasrcastro/FIO/actions/workflows/tests.yml)
+
 **Um assistente de IA para ajudar pessoas a retomarem o que estavam fazendo, sem vigilância, culpa ou falsas promessas de memória.**
 
 > Projeto acadêmico em evolução | FIAP — Tecnologia em Agentes Inteligentes | Grupo 36
@@ -48,7 +50,7 @@ Os exemplos acima funcionam **sem rede**, usando um classificador de intenção 
 - **Fase 3 — v3.1:** 29 testes locais aprovados em 28/10/2026; a integração externa foi testada com transporte simulado.
 - **Ainda pendente:** executar e registrar chamadas reais às APIs, testar o modelo LLM conectado e realizar deploy público na Cloudflare.
 
-Consulte [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [validação](docs/VALIDACAO.md) e [segurança](SECURITY.md).
+Consulte [status](docs/STATUS.md), [arquitetura](docs/ARQUITETURA.md), [validação](docs/VALIDACAO.md), [observabilidade](docs/OBSERVABILIDADE.md) e [segurança](SECURITY.md).
 
 ## Estrutura
 
