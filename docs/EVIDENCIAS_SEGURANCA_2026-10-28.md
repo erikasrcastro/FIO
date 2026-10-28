@@ -31,7 +31,7 @@ No momento de escrita desta evidência o domínio https://fio.erika-srcastro.wor
 - [ ] Efetuar uma chamada Groq com código privado e examinar contagem de tokens (sem publicar segredo).
 - [ ] Fazer teste autorizado de limite com requisições sequenciais e demonstrar resposta 429; não efetuar teste de carga agressivo em produção.
 - [ ] Verificar que modo simulado não foi bloqueado.
-- [x] Confirmado pela proprietária em 28/10/2026: Groq no plano **Free** (declaração da titular) e Cloudflare com **Workers Free — Active** (captura de Billing → Subscriptions). A captura também mostrava o domínio no **Free Plan — Active**, sem método de pagamento cadastrado. Orçamento aprovado: **R$ 0**. A captura não foi incluída no repositório público para preservar detalhes da conta.
+- [x] Confirmado em 28/10/2026 com **duas capturas de tela**: **Groq Free — $0 — Current Plan** (plano atual indicado no painel Groq) e **Cloudflare Workers Free — Active** (Billing → Subscriptions da Cloudflare). A captura Cloudflare também mostrava o domínio em **Free Plan — Active**, sem método de pagamento cadastrado. O plano Developer da Groq aparece como categoria paga não contratada. **Orçamento autorizado: R$ 0**. Imagens fornecidas pela proprietária e analisadas nesta conversa; não republicadas no repositório público para evitar exposição de dados de conta.
 - [ ] Validar teste offline Groq 429 e confirmar que não há retry automático.
 
 ## Limitações do limitador e restrição Free
