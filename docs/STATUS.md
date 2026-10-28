@@ -21,3 +21,11 @@
 - v0.4.0: API-01 BrasilAPI real; API-02 Groq real; detectado BUG-01 nos modos Full/Leve.
 - v0.4.1: REG-01 confirma **respostas distintas** para Full e Leve com mesmo contexto e Groq real.
 - 51 testes pytest aprovados no CI de correção: https://github.com/erikasrcastro/FIO/actions/runs/40707386497.
+
+### Hardening de consumo e segurança (v0.5.0 — CI aprovado; implantação pendente)
+
+O código contém Rate Limiting nativo Cloudflare (5 chamadas Groq/minuto por localidade, aproximado), fail-closed, Analytics Engine para eventos categóricos e tokens, 71 testes automatizados, e novos testes de abuso e autenticação. A conta Groq precisa de orçamento e alertas configurados separadamente pela responsável se o plano permitir. **Na última consulta externa, o domínio público ainda devolvia v0.4.1; portanto esses controles ainda não estavam verificados em produção.**
+
+- [Plano de segurança e consumo](SEGURANCA_CONSUMO.md)
+- [Evidências SG-01 e checklist](EVIDENCIAS_SEGURANCA_2026-10-28.md)
+- [GitHub Actions — execução verde](https://github.com/erikasrcastro/FIO/actions/runs/40711170011)
